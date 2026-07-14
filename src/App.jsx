@@ -231,9 +231,27 @@ export default function OvalBannerEditor() {
         const minSize = Math.min(...effectiveSizes);
         const maxAllowedSize = minSize * 1.5;
         
+        const maxBaseWidth = Math.max(...currentMetrics.map(l => l.baseExactWidth));
+        let anchorSize = minSize;
+        const longestLine = currentMetrics.find(l => l.baseExactWidth >= maxBaseWidth - 0.1);
+        if (longestLine) {
+           anchorSize = longestLine.finalFontSize * longestLine.hRatio;
+        }
+        
         const naturalStates = currentMetrics.map(l => {
            let naturalSize = l.finalFontSize * l.hRatio;
            if (naturalSize > maxAllowedSize) naturalSize = maxAllowedSize;
+           
+           let ratio = 1;
+           if (maxBaseWidth > 0) ratio = l.baseExactWidth / maxBaseWidth;
+           let groupTarget = anchorSize;
+           if (ratio < 0.4) {
+              groupTarget = anchorSize * 1.5;
+           } else if (ratio < 0.75) {
+              groupTarget = anchorSize * 1.2;
+           }
+           if (naturalSize > groupTarget) naturalSize = groupTarget;
+           
            let renderedWidth = l.baseExactWidth * (naturalSize / baseFontSize);
            return { id: l.id, baseExactWidth: l.baseExactWidth, naturalSize, renderedWidth };
         });
