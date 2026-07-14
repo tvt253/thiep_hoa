@@ -286,7 +286,11 @@ export default function OvalBannerEditor() {
                 safeWidth = (dx * 2) * 0.95;
               }
 
-              const shouldFit = autoFit && line.exactWidth > safeWidth && safeWidth > 0;
+              let finalFontSize = line.fontSize;
+              if (autoFit && line.exactWidth > safeWidth && safeWidth > 0) {
+                const scaleRatio = safeWidth / line.exactWidth;
+                finalFontSize = line.fontSize * scaleRatio;
+              }
 
               if (safeWidth > 0 && line.text.trim().length > 0) {
                 return (
@@ -296,12 +300,10 @@ export default function OvalBannerEditor() {
                     y={yPos}
                     fontFamily='"Times New Roman", Times, serif'
                     fontWeight="bold"
-                    fontSize={line.fontSize}
+                    fontSize={finalFontSize}
                     fill={textColor}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    textLength={shouldFit ? safeWidth : undefined}
-                    lengthAdjust={shouldFit ? "spacingAndGlyphs" : undefined}
                   >
                     {line.text}
                   </text>
