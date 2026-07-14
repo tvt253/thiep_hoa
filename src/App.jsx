@@ -12,7 +12,8 @@ import {
   Settings2,
   ChevronDown,
   ChevronUp,
-  RefreshCw
+  RefreshCw,
+  LayoutTemplate
 } from 'lucide-react';
 
 const SWATCHES = [
@@ -21,6 +22,57 @@ const SWATCHES = [
   { label: 'Đen', value: '#000000' },
   { label: 'Xanh dương', value: '#0000FF' },
   { label: 'Trắng', value: '#FFFFFF' },
+];
+
+const THEMES = [
+  {
+    id: 'dang_huong',
+    name: 'Dâng hương',
+    bgColor: '#FFFF00',
+    textColor: '#FF0000',
+    border: { type: 'single', color: '#FF0000', padding: 8, width: 4 },
+    lines: [
+      { id: 1, text: 'SỞ VĂN HÓA, THỂ THAO', scale: 100 },
+      { id: 2, text: 'VÀ DU LỊCH TỈNH QUẢNG TRỊ', scale: 100 },
+      { id: 3, text: 'KÍNH DÂNG', scale: 100 }
+    ]
+  },
+  {
+    id: 'kinh_le',
+    name: 'Kính lễ',
+    bgColor: '#FF0000',
+    textColor: '#FFFF00',
+    border: { type: 'single', color: '#FFFFFF', padding: 10, width: 2 },
+    lines: [
+      { id: 1, text: 'NGÂN HÀNG NHÀ NƯỚC', scale: 100 },
+      { id: 2, text: 'QUẢNG TRỊ', scale: 100 },
+      { id: 3, text: 'KÍNH LỄ!', scale: 100 }
+    ]
+  },
+  {
+    id: 'sinh_nhat',
+    name: 'Sinh nhật',
+    bgColor: '#FF0000',
+    textColor: '#FFFFFF',
+    border: { type: 'double', color: '#FFFFFF', padding: 10, width: 2, gap: 4 },
+    lines: [
+      { id: 1, text: 'GIA ĐÌNH EM SƠN NGA', scale: 100 },
+      { id: 2, text: 'CHÚC MỪNG SINH NHẬT', scale: 100 },
+      { id: 3, text: 'ANH TRAI', scale: 100 }
+    ]
+  },
+  {
+    id: 'kinh_vieng',
+    name: 'Kính viếng',
+    bgColor: '#000000',
+    textColor: '#FFFFFF',
+    border: { type: 'double', color: '#FFFFFF', padding: 10, width: 2, gap: 4 },
+    lines: [
+      { id: 1, text: 'GIA ĐÌNH THÔNG GIA', scale: 100 },
+      { id: 2, text: 'THÁI HỒNG VỆ', scale: 100 },
+      { id: 3, text: 'KÍNH VIẾNG', scale: 100 }
+    ]
+  }
 ];
 
 const getCanvasContext = () => {
@@ -41,17 +93,29 @@ export default function OvalBannerEditor() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
-  const [bgColor, setBgColor] = useState('#FF0000');
-  const [textColor, setTextColor] = useState('#FFFF00');
+  const [activeShape, setActiveShape] = useState('oval');
+  const [activeThemeId, setActiveThemeId] = useState('dang_huong');
+  
+  const [bgColor, setBgColor] = useState(THEMES[0].bgColor);
+  const [textColor, setTextColor] = useState(THEMES[0].textColor);
+  const [currentBorder, setCurrentBorder] = useState(THEMES[0].border);
+  
   const [ovalScaleX, setOvalScaleX] = useState(95); 
   const [ovalScaleY, setOvalScaleY] = useState(70); 
   const [lineSpacing, setLineSpacing] = useState(1.5); 
   const [autoFit, setAutoFit] = useState(true);
   
-  const [lines, setLines] = useState([
-    { id: 1, text: 'CÔNG TY TNHH PHÁT TÀI', scale: 100 },
-    { id: 2, text: 'CHÚC MỪNG KHAI TRƯƠNG HỒNG PHÁT', scale: 100 },
-  ]);
+  const [lines, setLines] = useState(THEMES[0].lines);
+
+  const applyTheme = (themeId) => {
+    const theme = THEMES.find(t => t.id === themeId);
+    if (!theme) return;
+    setActiveThemeId(themeId);
+    setBgColor(theme.bgColor);
+    setTextColor(theme.textColor);
+    setCurrentBorder(theme.border);
+    setLines(theme.lines.map((l, i) => ({ ...l, id: Date.now() + i })));
+  };
 
   const addLine = () => setLines([...lines, { id: Date.now(), text: '', scale: 100 }]);
   const removeLine = (id) => setLines(lines.filter(l => l.id !== id));
@@ -175,28 +239,11 @@ export default function OvalBannerEditor() {
     });
   }
 
-  if (autoFit && currentMetrics.length > 1) {
-    const maxLineWidth = Math.max(...currentMetrics.map(l => l.expectedWidth));
-    currentMetrics = currentMetrics.map(l => {
-       let targetWidth = undefined;
-       const minTarget = maxLineWidth * 0.8;
-       if (l.expectedWidth > 0 && l.expectedWidth < minTarget) {
-          targetWidth = Math.min(minTarget, l.expectedWidth * 2.0);
-          if (targetWidth > l.safeWidth && l.safeWidth > 0) {
-             targetWidth = l.safeWidth;
-          }
-       }
-       return { ...l, targetWidth };
-    });
-  }
+  // letter-spacing stretch removed
 
   const lineMetrics = currentMetrics;
 
-  const syncSizes = () => {
-    if (lineMetrics.length === 0) return;
-    const minScale = Math.min(...lineMetrics.map(l => l.clampedScale));
-    setLines(lines.map(l => ({ ...l, scale: minScale })));
-  };
+  // syncSizes removed
 
   return (
     <div className="flex h-screen w-full bg-slate-100 overflow-hidden font-sans">
@@ -209,6 +256,42 @@ export default function OvalBannerEditor() {
           <h2 className="text-2xl font-bold mb-8 text-slate-800 tracking-tight">Thiệp Hoa</h2>
           
           <div className="space-y-8">
+            <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden p-4 space-y-4">
+              <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-200">
+                <LayoutTemplate size={16} />
+                <h3 className="text-xs font-bold uppercase tracking-wider">Mẫu & Kiểu</h3>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-700">Hình dáng mẫu</label>
+                  <select 
+                    value={activeShape} 
+                    onChange={(e) => setActiveShape(e.target.value)}
+                    className="w-full text-sm font-semibold border border-slate-200 rounded p-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value="oval">Hình Ovan</option>
+                    <option value="placeholder_1" disabled>Hình chữ nhật (Sắp ra mắt)</option>
+                    <option value="placeholder_2" disabled>Hình thoi (Sắp ra mắt)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-700">Chủ đề thiết kế</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {THEMES.map(theme => (
+                      <button
+                        key={theme.id}
+                        onClick={() => applyTheme(theme.id)}
+                        className={`text-xs py-2 px-2 rounded border transition-colors ${activeThemeId === theme.id ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 font-medium'}`}
+                      >
+                        {theme.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
               <button 
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
@@ -317,9 +400,10 @@ export default function OvalBannerEditor() {
                   <AlignJustify size={18} />
                   <h3 className="text-sm font-bold uppercase tracking-wider">Văn bản</h3>
                 </div>
-                <button onClick={syncSizes} className="text-xs font-medium flex items-center gap-1.5 bg-indigo-50 text-indigo-600 px-2.5 py-1.5 rounded hover:bg-indigo-100 transition-colors border border-indigo-200" title="Ép tất cả các dòng bằng với kích thước của dòng nhỏ nhất">
-                  <RefreshCw size={14} /> Đồng bộ Size
-                </button>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 cursor-pointer bg-slate-50 px-2.5 py-1.5 rounded hover:bg-slate-100 transition-colors border border-slate-200">
+                  <input type="checkbox" checked={autoFit} onChange={(e) => setAutoFit(e.target.checked)} className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500" />
+                  Tự động vừa khung
+                </label>
               </div>
 
               <div className="space-y-3">
@@ -350,10 +434,6 @@ export default function OvalBannerEditor() {
                 ))}
                 
                 <div className="pt-2 border-t border-slate-100 mt-2">
-                  <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer mb-3">
-                    <input type="checkbox" checked={autoFit} onChange={(e) => setAutoFit(e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" />
-                    Tự động ép chữ vừa khung (Auto-fit)
-                  </label>
                   <button onClick={addLine} className="w-full text-sm font-medium flex items-center justify-center gap-1 bg-blue-50 text-blue-700 px-3 py-2.5 rounded-md hover:bg-blue-100 transition-colors border border-dashed border-blue-300">
                     <Plus size={16} /> Thêm dòng mới
                   </button>
@@ -363,11 +443,11 @@ export default function OvalBannerEditor() {
           </div>
         </div>
 
-        <div className="p-5 border-t border-slate-200 bg-white space-y-3 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-          <button onClick={handlePrint} className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-600/20 font-semibold text-sm">
-            <Printer size={18} /> In trực tiếp
+        <div className="p-5 border-t border-slate-200 bg-white grid grid-cols-2 gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+          <button onClick={handlePrint} className="flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-600/20 font-semibold text-sm">
+            <Printer size={18} /> In
           </button>
-          <button onClick={handleDownloadPDF} className="w-full flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-300 py-2.5 rounded-lg hover:bg-slate-50 transition shadow-sm font-semibold text-sm">
+          <button onClick={handleDownloadPDF} className="flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-300 py-2.5 rounded-lg hover:bg-slate-50 transition shadow-sm font-semibold text-sm">
             <Download size={18} /> Tải PDF
           </button>
         </div>
@@ -384,6 +464,32 @@ export default function OvalBannerEditor() {
           <svg viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
             <ellipse cx={CENTER_X} cy={CENTER_Y} rx={rx} ry={ry} fill={bgColor} />
 
+            {currentBorder && currentBorder.type === 'single' && (
+              <ellipse 
+                cx={CENTER_X} cy={CENTER_Y} 
+                rx={Math.max(0, rx - currentBorder.padding)} 
+                ry={Math.max(0, ry - currentBorder.padding)} 
+                fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.width} 
+              />
+            )}
+            
+            {currentBorder && currentBorder.type === 'double' && (
+              <>
+                <ellipse 
+                  cx={CENTER_X} cy={CENTER_Y} 
+                  rx={Math.max(0, rx - currentBorder.padding)} 
+                  ry={Math.max(0, ry - currentBorder.padding)} 
+                  fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.width} 
+                />
+                <ellipse 
+                  cx={CENTER_X} cy={CENTER_Y} 
+                  rx={Math.max(0, rx - currentBorder.padding - currentBorder.gap - currentBorder.width)} 
+                  ry={Math.max(0, ry - currentBorder.padding - currentBorder.gap - currentBorder.width)} 
+                  fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.width} 
+                />
+              </>
+            )}
+
             {lineMetrics.map((line) => {
               if (line.text.trim().length > 0) {
                 return (
@@ -397,8 +503,7 @@ export default function OvalBannerEditor() {
                     fill={textColor}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    textLength={line.targetWidth}
-                    lengthAdjust={line.targetWidth ? "spacing" : undefined}
+                    fontStyle={line.text.includes('!') ? 'italic' : 'normal'}
                   >
                     {line.text}
                   </text>
