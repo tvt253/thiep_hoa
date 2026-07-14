@@ -242,7 +242,6 @@ export default function OvalBannerEditor() {
       }
     } else {
       let minHRatio = Math.min(...currentMetrics.map(m => m.hRatio));
-      if (minHRatio > 1) minHRatio = 1;
       currentMetrics = currentMetrics.map(l => ({ ...l, hRatio: minHRatio, harmonyRatio: 1 }));
     }
 
