@@ -178,21 +178,20 @@ export default function OvalBannerEditor() {
     }
 
     currentMetrics = currentMetrics.map(m => {
-      const vFontSize = m.originalFontSize * verticalRatio;
+      const vFontSize = m.finalFontSize * verticalRatio;
       return {
          ...m,
-         vFontSize,
-         vExactWidth: m.originalExactWidth * verticalRatio,
-         vHeight: vFontSize * lineSpacing,
+         finalFontSize: vFontSize,
+         finalHeight: vFontSize * lineSpacing,
       };
     });
 
-    totalHeight = currentMetrics.reduce((sum, m) => sum + m.vHeight, 0);
+    totalHeight = currentMetrics.reduce((sum, m) => sum + m.finalHeight, 0);
     let startY = CENTER_Y - (totalHeight / 2);
 
     currentMetrics = currentMetrics.map(m => {
-      const yPos = startY + (m.vHeight / 2);
-      startY += m.vHeight;
+      const yPos = startY + (m.finalHeight / 2);
+      startY += m.finalHeight;
 
       let borderOffset = 0;
       if (currentBorder) {
@@ -210,21 +209,22 @@ export default function OvalBannerEditor() {
         safeWidth = (dx * 2) * 0.95;
       }
 
+      const currentExactWidth = m.originalExactWidth * (m.finalFontSize / m.originalFontSize);
       let hRatio = 1;
-      if (autoFit && safeWidth > 0 && m.vExactWidth > 0) {
-        hRatio = safeWidth / m.vExactWidth;
+      if (autoFit && safeWidth > 0 && currentExactWidth > 0) {
+        hRatio = safeWidth / currentExactWidth;
       }
       
-      return { ...m, yPosApprox: yPos, safeWidth, hRatio };
+      return { ...m, finalYPos: yPos, safeWidth, hRatio };
     });
 
     if (autoFit && currentMetrics.length > 1) {
-      const effectiveSizes = currentMetrics.map(l => l.vFontSize * l.hRatio);
+      const effectiveSizes = currentMetrics.map(l => l.finalFontSize * l.hRatio);
       const minSize = Math.min(...effectiveSizes);
       const maxAllowedSize = minSize * 1.5;
 
       currentMetrics = currentMetrics.map(l => {
-         let size = l.vFontSize * l.hRatio;
+         let size = l.finalFontSize * l.hRatio;
          l.harmonyRatio = size > maxAllowedSize ? (maxAllowedSize / size) : 1;
          return l;
       });
@@ -233,20 +233,23 @@ export default function OvalBannerEditor() {
     }
 
     currentMetrics = currentMetrics.map(m => {
-      let newFontSize = m.vFontSize * m.hRatio * m.harmonyRatio;
-      let finalRatio = verticalRatio * m.hRatio * m.harmonyRatio;
-      
+      let newFontSize = m.finalFontSize * m.hRatio * m.harmonyRatio;
       const newHeight = newFontSize * lineSpacing;
-      let expectedWidth = m.vExactWidth * m.hRatio * m.harmonyRatio;
+
+      const requestedFontSize = baseFontSize * (m.scale / 100);
+      let isClamped = false;
+      let clampedScale = m.scale;
+      if (autoFit && newFontSize < requestedFontSize * 0.99) {
+        isClamped = true;
+        clampedScale = Math.floor((newFontSize / baseFontSize) * 100);
+      }
 
       return { 
          ...m, 
          finalFontSize: newFontSize, 
-         finalHeight: newHeight, 
-         finalYPos: m.yPosApprox, 
-         isClamped: finalRatio < 0.99, 
-         clampedScale: Math.floor(m.scale * finalRatio),
-         expectedWidth
+         finalHeight: newHeight,
+         isClamped,
+         clampedScale
       };
     });
   }
@@ -490,8 +493,8 @@ export default function OvalBannerEditor() {
 
       <div className={`relative transition-all duration-500 ease-in-out flex flex-col items-center justify-center preview-container ${isSidebarOpen ? 'w-[70%]' : 'w-full'}`}>
         
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`absolute top-1/2 -translate-y-1/2 bg-white p-2.5 rounded-r-xl shadow-[4px_0_15px_rgba(0,0,0,0.1)] border border-l-0 border-slate-200 text-slate-500 hover:text-blue-600 z-20 hide-on-print transition-all duration-500 ${isSidebarOpen ? 'left-0' : 'left-0'}`} title={isSidebarOpen ? "Thu gọn bảng điều khiển" : "Mở rộng bảng điều khiển"}>
-          {isSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeftOpen size={24} />}
+        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`absolute top-4 bg-white p-1.5 rounded-r-lg shadow-[2px_0_10px_rgba(0,0,0,0.1)] border border-l-0 border-slate-200 text-slate-500 hover:text-blue-600 z-20 hide-on-print transition-all duration-500 ${isSidebarOpen ? 'left-0' : 'left-0'}`} title={isSidebarOpen ? "Thu gọn bảng điều khiển" : "Mở rộng bảng điều khiển"}>
+          {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
         </button>
 
         <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] print-paper w-[90%] max-w-[1200px] aspect-[297/210] relative flex items-center justify-center border border-slate-200 overflow-hidden">
