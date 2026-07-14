@@ -8,7 +8,10 @@ import {
   Download,
   Palette,
   Maximize,
-  AlignJustify
+  AlignJustify,
+  Settings2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 const SWATCHES = [
@@ -21,6 +24,7 @@ const SWATCHES = [
 
 export default function OvalBannerEditor() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const [bgColor, setBgColor] = useState('#FF0000');
   const [textColor, setTextColor] = useState('#FFFF00');
@@ -81,86 +85,104 @@ export default function OvalBannerEditor() {
           <h2 className="text-2xl font-bold mb-8 text-slate-800 tracking-tight">Thiệp Hoa</h2>
           
           <div className="space-y-8">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-100">
-                <Palette size={18} />
-                <h3 className="text-sm font-bold uppercase tracking-wider">Màu sắc</h3>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
-                  <label className="text-sm font-medium text-slate-700">Màu nền Ovan</label>
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1.5 mr-2">
-                      {SWATCHES.map(s => (
-                        <button 
-                          key={`bg-${s.value}`}
-                          onClick={() => setBgColor(s.value)}
-                          className={`w-6 h-6 rounded-full border shadow-sm transition-transform hover:scale-110 ${bgColor === s.value ? 'ring-2 ring-blue-500 ring-offset-2 border-transparent' : 'border-slate-300'}`}
-                          style={{ backgroundColor: s.value }}
-                          title={s.label}
-                        />
-                      ))}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+              <button 
+                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                className="w-full flex items-center justify-between p-3 bg-white hover:bg-slate-50 transition-colors text-slate-700 font-semibold text-sm border-b border-transparent"
+                style={{ borderBottomColor: isSettingsOpen ? '#e2e8f0' : 'transparent' }}
+              >
+                <div className="flex items-center gap-2">
+                  <Settings2 size={16} />
+                  <span>Tùy chỉnh Màu sắc & Kích thước</span>
+                </div>
+                {isSettingsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+
+              <div className={`transition-all duration-300 ease-in-out ${isSettingsOpen ? 'max-h-[1000px] opacity-100 p-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-200">
+                      <Palette size={16} />
+                      <h3 className="text-xs font-bold uppercase tracking-wider">Màu sắc</h3>
                     </div>
-                    <input 
-                      type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)}
-                      className="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent"
-                    />
-                  </div>
-                </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center bg-white p-2.5 rounded border border-slate-200 shadow-sm">
+                        <label className="text-xs font-medium text-slate-700">Màu nền Ovan</label>
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1.5 mr-2">
+                            {SWATCHES.map(s => (
+                              <button 
+                                key={`bg-${s.value}`}
+                                onClick={() => setBgColor(s.value)}
+                                className={`w-5 h-5 rounded-full border shadow-sm transition-transform hover:scale-110 ${bgColor === s.value ? 'ring-2 ring-blue-500 ring-offset-2 border-transparent' : 'border-slate-300'}`}
+                                style={{ backgroundColor: s.value }}
+                                title={s.label}
+                              />
+                            ))}
+                          </div>
+                          <input 
+                            type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)}
+                            className="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent"
+                          />
+                        </div>
+                      </div>
 
-                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
-                  <label className="text-sm font-medium text-slate-700">Màu chữ</label>
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1.5 mr-2">
-                      {SWATCHES.map(s => (
-                        <button 
-                          key={`text-${s.value}`}
-                          onClick={() => setTextColor(s.value)}
-                          className={`w-6 h-6 rounded-full border shadow-sm transition-transform hover:scale-110 ${textColor === s.value ? 'ring-2 ring-blue-500 ring-offset-2 border-transparent' : 'border-slate-300'}`}
-                          style={{ backgroundColor: s.value }}
-                          title={s.label}
-                        />
-                      ))}
+                      <div className="flex justify-between items-center bg-white p-2.5 rounded border border-slate-200 shadow-sm">
+                        <label className="text-xs font-medium text-slate-700">Màu chữ</label>
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1.5 mr-2">
+                            {SWATCHES.map(s => (
+                              <button 
+                                key={`text-${s.value}`}
+                                onClick={() => setTextColor(s.value)}
+                                className={`w-5 h-5 rounded-full border shadow-sm transition-transform hover:scale-110 ${textColor === s.value ? 'ring-2 ring-blue-500 ring-offset-2 border-transparent' : 'border-slate-300'}`}
+                                style={{ backgroundColor: s.value }}
+                                title={s.label}
+                              />
+                            ))}
+                          </div>
+                          <input 
+                            type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)}
+                            className="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <input 
-                      type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)}
-                      className="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent"
-                    />
                   </div>
-                </div>
-              </div>
-            </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-100">
-                <Maximize size={18} />
-                <h3 className="text-sm font-bold uppercase tracking-wider">Kích thước & Bố cục</h3>
-              </div>
-              
-              <div className="space-y-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm font-medium text-slate-700">
-                    <label>Kích thước Ngang (%)</label>
-                    <span className="text-blue-600 bg-blue-100 px-2 rounded">{ovalScaleX}%</span>
-                  </div>
-                  <input type="range" min="50" max="100" value={ovalScaleX} onChange={(e) => setOvalScaleX(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
-                </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-200">
+                      <Maximize size={16} />
+                      <h3 className="text-xs font-bold uppercase tracking-wider">Kích thước & Bố cục</h3>
+                    </div>
+                    
+                    <div className="space-y-4 bg-white p-3 rounded border border-slate-200 shadow-sm">
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs font-medium text-slate-700">
+                          <label>Kích thước Ngang (%)</label>
+                          <span className="text-blue-600 bg-blue-50 px-1.5 rounded">{ovalScaleX}%</span>
+                        </div>
+                        <input type="range" min="50" max="100" value={ovalScaleX} onChange={(e) => setOvalScaleX(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer h-1.5" />
+                      </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm font-medium text-slate-700">
-                    <label>Kích thước Dọc (%)</label>
-                    <span className="text-blue-600 bg-blue-100 px-2 rounded">{ovalScaleY}%</span>
-                  </div>
-                  <input type="range" min="50" max="100" value={ovalScaleY} onChange={(e) => setOvalScaleY(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
-                </div>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs font-medium text-slate-700">
+                          <label>Kích thước Dọc (%)</label>
+                          <span className="text-blue-600 bg-blue-50 px-1.5 rounded">{ovalScaleY}%</span>
+                        </div>
+                        <input type="range" min="50" max="100" value={ovalScaleY} onChange={(e) => setOvalScaleY(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer h-1.5" />
+                      </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm font-medium text-slate-700">
-                    <label>Khoảng cách dòng</label>
-                    <span className="text-blue-600 bg-blue-100 px-2 rounded">{lineSpacing}</span>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs font-medium text-slate-700">
+                          <label>Khoảng cách dòng</label>
+                          <span className="text-blue-600 bg-blue-50 px-1.5 rounded">{lineSpacing}</span>
+                        </div>
+                        <input type="range" min="0.5" max="3.0" step="0.1" value={lineSpacing} onChange={(e) => setLineSpacing(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer h-1.5" />
+                      </div>
+                    </div>
                   </div>
-                  <input type="range" min="0.5" max="3.0" step="0.1" value={lineSpacing} onChange={(e) => setLineSpacing(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
                 </div>
               </div>
             </div>
