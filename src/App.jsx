@@ -30,7 +30,7 @@ const THEMES = [
     name: 'Dâng hương',
     bgColor: '#FFFF00',
     textColor: '#FF0000',
-    border: { type: 'double', color: '#FF0000', padding: 0, outerWidth: 4, gap: 4, innerWidth: 4 },
+    border: { type: 'single', color: '#FF0000', padding: 4, width: 2 },
     lines: [
       { id: 1, text: 'SỞ VĂN HÓA, THỂ THAO', scale: 100 },
       { id: 2, text: 'VÀ DU LỊCH TỈNH QUẢNG TRỊ', scale: 100 },
@@ -42,7 +42,7 @@ const THEMES = [
     name: 'Kính lễ',
     bgColor: '#FF0000',
     textColor: '#FFFF00',
-    border: { type: 'double', color: '#FFFFFF', padding: 0, outerWidth: 4, gap: 4, innerWidth: 4 },
+    border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
     lines: [
       { id: 1, text: 'NGÂN HÀNG NHÀ NƯỚC', scale: 100 },
       { id: 2, text: 'QUẢNG TRỊ', scale: 100 },
@@ -54,7 +54,7 @@ const THEMES = [
     name: 'Sinh nhật',
     bgColor: '#FF0000',
     textColor: '#FFFFFF',
-    border: { type: 'double', color: '#FFFFFF', padding: 0, outerWidth: 4, gap: 4, innerWidth: 4 },
+    border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
     lines: [
       { id: 1, text: 'GIA ĐÌNH EM SƠN NGA', scale: 100 },
       { id: 2, text: 'CHÚC MỪNG SINH NHẬT', scale: 100 },
@@ -66,7 +66,7 @@ const THEMES = [
     name: 'Kính viếng',
     bgColor: '#000000',
     textColor: '#FFFFFF',
-    border: { type: 'double', color: '#FFFFFF', padding: 0, outerWidth: 4, gap: 4, innerWidth: 4 },
+    border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
     lines: [
       { id: 1, text: 'GIA ĐÌNH THÔNG GIA', scale: 100 },
       { id: 2, text: 'THÁI HỒNG VỆ', scale: 100 },
