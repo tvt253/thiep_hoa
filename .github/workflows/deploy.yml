@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   # Chạy quy trình này khi có code mới đẩy lên nhánh main
   push:
-    branches: ["main"]
+    branches: ["main", "feature/cloud-shape"]
   # Cho phép chạy thủ công từ tab Actions
   workflow_dispatch:
 
