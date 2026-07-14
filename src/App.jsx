@@ -30,7 +30,7 @@ const THEMES = [
     name: 'Dâng hương',
     bgColor: '#FFFF00',
     textColor: '#FF0000',
-    border: { type: 'single', color: '#FF0000', padding: 8, width: 4 },
+    border: { type: 'double', color: '#FF0000', padding: 0, outerWidth: 4, gap: 4, innerWidth: 4 },
     lines: [
       { id: 1, text: 'SỞ VĂN HÓA, THỂ THAO', scale: 100 },
       { id: 2, text: 'VÀ DU LỊCH TỈNH QUẢNG TRỊ', scale: 100 },
@@ -42,7 +42,7 @@ const THEMES = [
     name: 'Kính lễ',
     bgColor: '#FF0000',
     textColor: '#FFFF00',
-    border: { type: 'single', color: '#FFFFFF', padding: 10, width: 2 },
+    border: { type: 'double', color: '#FFFFFF', padding: 0, outerWidth: 4, gap: 4, innerWidth: 4 },
     lines: [
       { id: 1, text: 'NGÂN HÀNG NHÀ NƯỚC', scale: 100 },
       { id: 2, text: 'QUẢNG TRỊ', scale: 100 },
@@ -54,7 +54,7 @@ const THEMES = [
     name: 'Sinh nhật',
     bgColor: '#FF0000',
     textColor: '#FFFFFF',
-    border: { type: 'double', color: '#FFFFFF', padding: 10, width: 2, gap: 4 },
+    border: { type: 'double', color: '#FFFFFF', padding: 0, outerWidth: 4, gap: 4, innerWidth: 4 },
     lines: [
       { id: 1, text: 'GIA ĐÌNH EM SƠN NGA', scale: 100 },
       { id: 2, text: 'CHÚC MỪNG SINH NHẬT', scale: 100 },
@@ -66,7 +66,7 @@ const THEMES = [
     name: 'Kính viếng',
     bgColor: '#000000',
     textColor: '#FFFFFF',
-    border: { type: 'double', color: '#FFFFFF', padding: 10, width: 2, gap: 4 },
+    border: { type: 'double', color: '#FFFFFF', padding: 0, outerWidth: 4, gap: 4, innerWidth: 4 },
     lines: [
       { id: 1, text: 'GIA ĐÌNH THÔNG GIA', scale: 100 },
       { id: 2, text: 'THÁI HỒNG VỆ', scale: 100 },
@@ -83,15 +83,18 @@ const getCanvasContext = () => {
   return window._canvasCtx;
 };
 
-const measureTextWidth = (text, fontSize) => {
+const measureTextWidth = (text, fontSize, fontFamily) => {
   const ctx = getCanvasContext();
-  ctx.font = `bold ${fontSize}px "Times New Roman", Times, serif`;
+  ctx.font = `bold ${fontSize}px ${fontFamily}`;
   return ctx.measureText(text).width;
 };
 
 export default function OvalBannerEditor() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTemplateOpen, setIsTemplateOpen] = useState(true);
+  
+  const [fontFamily, setFontFamily] = useState('"Times New Roman", Times, serif');
   
   const [activeShape, setActiveShape] = useState('oval');
   const [activeThemeId, setActiveThemeId] = useState('dang_huong');
@@ -153,7 +156,7 @@ export default function OvalBannerEditor() {
 
   let currentMetrics = lines.map(line => {
     const fontSize = baseFontSize * (line.scale / 100);
-    const exactWidth = measureTextWidth(line.text, fontSize);
+    const exactWidth = measureTextWidth(line.text, fontSize, fontFamily);
     const height = fontSize * lineSpacing;
     return { 
        ...line, 
@@ -191,15 +194,24 @@ export default function OvalBannerEditor() {
       const yPos = startY + (m.vHeight / 2);
       startY += m.vHeight;
 
+      let borderOffset = 0;
+      if (currentBorder) {
+        if (currentBorder.type === 'single') borderOffset = currentBorder.padding + currentBorder.width;
+        if (currentBorder.type === 'double') borderOffset = currentBorder.padding + currentBorder.outerWidth + currentBorder.gap + currentBorder.innerWidth;
+      }
+      
+      const innerRx = Math.max(1, rx - borderOffset);
+      const innerRy = Math.max(1, ry - borderOffset);
+
       const dy = Math.abs(yPos - CENTER_Y);
       let safeWidth = 0;
-      if (dy < ry) {
-        const dx = rx * Math.sqrt(1 - Math.pow(dy / ry, 2));
+      if (dy < innerRy) {
+        const dx = innerRx * Math.sqrt(1 - Math.pow(dy / innerRy, 2));
         safeWidth = (dx * 2) * 0.95;
       }
 
       let hRatio = 1;
-      if (autoFit && m.vExactWidth > safeWidth && safeWidth > 0) {
+      if (autoFit && safeWidth > 0 && m.vExactWidth > 0) {
         hRatio = safeWidth / m.vExactWidth;
       }
       
@@ -256,38 +268,47 @@ export default function OvalBannerEditor() {
           <h2 className="text-2xl font-bold mb-8 text-slate-800 tracking-tight">Thiệp Hoa</h2>
           
           <div className="space-y-8">
-            <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden p-4 space-y-4">
-              <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-200">
-                <LayoutTemplate size={16} />
-                <h3 className="text-xs font-bold uppercase tracking-wider">Mẫu & Kiểu</h3>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-700">Hình dáng mẫu</label>
-                  <select 
-                    value={activeShape} 
-                    onChange={(e) => setActiveShape(e.target.value)}
-                    className="w-full text-sm font-semibold border border-slate-200 rounded p-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  >
-                    <option value="oval">Hình Ovan</option>
-                    <option value="placeholder_1" disabled>Hình chữ nhật (Sắp ra mắt)</option>
-                    <option value="placeholder_2" disabled>Hình thoi (Sắp ra mắt)</option>
-                  </select>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+              <button 
+                onClick={() => setIsTemplateOpen(!isTemplateOpen)}
+                className="w-full flex items-center justify-between p-3 bg-white hover:bg-slate-50 transition-colors text-slate-700 font-semibold text-sm border-b border-transparent"
+                style={{ borderBottomColor: isTemplateOpen ? '#e2e8f0' : 'transparent' }}
+              >
+                <div className="flex items-center gap-2">
+                  <LayoutTemplate size={16} />
+                  <span>Mẫu & Kiểu</span>
                 </div>
+                {isTemplateOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+              
+              <div className={`transition-all duration-300 ease-in-out ${isTemplateOpen ? 'max-h-[1000px] opacity-100 p-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-700">Hình dáng mẫu</label>
+                    <select 
+                      value={activeShape} 
+                      onChange={(e) => setActiveShape(e.target.value)}
+                      className="w-full text-sm font-semibold border border-slate-200 rounded p-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    >
+                      <option value="oval">Hình Ovan</option>
+                      <option value="placeholder_1" disabled>Hình chữ nhật (Sắp ra mắt)</option>
+                      <option value="placeholder_2" disabled>Hình thoi (Sắp ra mắt)</option>
+                    </select>
+                  </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-700">Chủ đề thiết kế</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {THEMES.map(theme => (
-                      <button
-                        key={theme.id}
-                        onClick={() => applyTheme(theme.id)}
-                        className={`text-xs py-2 px-2 rounded border transition-colors ${activeThemeId === theme.id ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 font-medium'}`}
-                      >
-                        {theme.name}
-                      </button>
-                    ))}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-700">Chủ đề thiết kế</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {THEMES.map(theme => (
+                        <button
+                          key={theme.id}
+                          onClick={() => applyTheme(theme.id)}
+                          className={`text-xs py-2 px-2 rounded border transition-colors ${activeThemeId === theme.id ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 font-medium'}`}
+                        >
+                          {theme.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -388,6 +409,20 @@ export default function OvalBannerEditor() {
                         </div>
                         <input type="range" min="0.5" max="3.0" step="0.1" value={lineSpacing} onChange={(e) => setLineSpacing(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer h-1.5" />
                       </div>
+
+                      <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                        <label className="text-xs font-medium text-slate-700">Font chữ</label>
+                        <select 
+                          value={fontFamily} 
+                          onChange={(e) => setFontFamily(e.target.value)}
+                          className="w-full text-sm border border-slate-200 rounded p-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        >
+                          <option value='"Times New Roman", Times, serif'>Times New Roman</option>
+                          <option value='Arial, Helvetica, sans-serif'>Arial</option>
+                          <option value='"Courier New", Courier, monospace'>Courier New</option>
+                          <option value='Tahoma, Geneva, sans-serif'>Tahoma</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -477,15 +512,15 @@ export default function OvalBannerEditor() {
               <>
                 <ellipse 
                   cx={CENTER_X} cy={CENTER_Y} 
-                  rx={Math.max(0, rx - currentBorder.padding)} 
-                  ry={Math.max(0, ry - currentBorder.padding)} 
-                  fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.width} 
+                  rx={Math.max(0, rx - currentBorder.padding - (currentBorder.outerWidth/2))} 
+                  ry={Math.max(0, ry - currentBorder.padding - (currentBorder.outerWidth/2))} 
+                  fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.outerWidth} 
                 />
                 <ellipse 
                   cx={CENTER_X} cy={CENTER_Y} 
-                  rx={Math.max(0, rx - currentBorder.padding - currentBorder.gap - currentBorder.width)} 
-                  ry={Math.max(0, ry - currentBorder.padding - currentBorder.gap - currentBorder.width)} 
-                  fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.width} 
+                  rx={Math.max(0, rx - currentBorder.padding - currentBorder.outerWidth - currentBorder.gap - (currentBorder.innerWidth/2))} 
+                  ry={Math.max(0, ry - currentBorder.padding - currentBorder.outerWidth - currentBorder.gap - (currentBorder.innerWidth/2))} 
+                  fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.innerWidth} 
                 />
               </>
             )}
@@ -497,7 +532,7 @@ export default function OvalBannerEditor() {
                     key={line.id}
                     x={CENTER_X}
                     y={line.finalYPos}
-                    fontFamily='"Times New Roman", Times, serif'
+                    fontFamily={fontFamily}
                     fontWeight="bold"
                     fontSize={line.finalFontSize}
                     fill={textColor}
