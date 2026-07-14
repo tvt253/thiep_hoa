@@ -13,7 +13,9 @@ import {
   ChevronDown,
   ChevronUp,
   RefreshCw,
-  LayoutTemplate
+  LayoutTemplate,
+  Bold,
+  Italic
 } from 'lucide-react';
 
 const SWATCHES = [
@@ -83,9 +85,11 @@ const getCanvasContext = () => {
   return window._canvasCtx;
 };
 
-const measureTextWidth = (text, fontSize, fontFamily) => {
+const measureTextWidth = (text, fontSize, fontFamily, isBold, isItalic) => {
   const ctx = getCanvasContext();
-  ctx.font = `bold ${fontSize}px ${fontFamily}`;
+  const weight = isBold !== false ? 'bold' : 'normal';
+  const style = isItalic ? 'italic' : 'normal';
+  ctx.font = `${style} ${weight} ${fontSize}px ${fontFamily}`;
   return ctx.measureText(text).width;
 };
 
@@ -120,7 +124,7 @@ export default function OvalBannerEditor() {
     setLines(theme.lines.map((l, i) => ({ ...l, id: Date.now() + i })));
   };
 
-  const addLine = () => setLines([...lines, { id: Date.now(), text: '', scale: 100 }]);
+  const addLine = () => setLines([...lines, { id: Date.now(), text: '', scale: 100, isBold: true, isItalic: false }]);
   const removeLine = (id) => setLines(lines.filter(l => l.id !== id));
   
   const updateLine = (id, field, value) => {
@@ -155,8 +159,10 @@ export default function OvalBannerEditor() {
   const maxAllowedHeight = (ry * 2) * 0.85;
 
   let currentMetrics = lines.map(line => {
+    const isBold = line.isBold !== false;
+    const isItalic = line.isItalic === true;
     const fontSize = baseFontSize * (line.scale / 100);
-    const exactWidth = measureTextWidth(line.text, fontSize, fontFamily);
+    const exactWidth = measureTextWidth(line.text, fontSize, fontFamily, isBold, isItalic);
     const height = fontSize * lineSpacing;
     return { 
        ...line, 
@@ -460,10 +466,25 @@ export default function OvalBannerEditor() {
                         <Trash2 size={16} />
                       </button>
                     </div>
-                    <div className="flex items-center gap-3 pl-8">
-                      <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Size %:</span>
-                      <input type="range" min="50" max="250" value={line.scale} onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} className={`flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer ${line.isClamped ? 'accent-orange-500' : 'accent-slate-600'}`} />
-                      <div className="flex flex-col items-end w-10">
+                    <div className="flex items-center gap-2 pl-8">
+                      <button 
+                        onClick={() => updateLine(line.id, 'isBold', line.isBold === false ? true : false)} 
+                        className={`p-1 rounded ${line.isBold !== false ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}
+                        title="In đậm"
+                      >
+                        <Bold size={14} />
+                      </button>
+                      <button 
+                        onClick={() => updateLine(line.id, 'isItalic', !line.isItalic)} 
+                        className={`p-1 rounded ${line.isItalic ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}
+                        title="In nghiêng"
+                      >
+                        <Italic size={14} />
+                      </button>
+
+                      <span className="text-xs font-medium text-slate-500 whitespace-nowrap ml-1">Size %:</span>
+                      <input type="range" min="50" max="250" value={line.scale} onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} className={`w-20 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer ${line.isClamped ? 'accent-orange-500' : 'accent-slate-600'}`} />
+                      <div className="flex flex-col items-end w-8">
                         <span className={`text-xs font-bold ${line.isClamped ? 'text-orange-600' : 'text-slate-600'}`}>{line.scale}%</span>
                         {line.isClamped && <span className="text-[9px] text-orange-500 font-medium leading-none -mt-0.5" title="Đã chạm viền">Max: {line.clampedScale}</span>}
                       </div>
@@ -536,12 +557,12 @@ export default function OvalBannerEditor() {
                     x={CENTER_X}
                     y={line.finalYPos}
                     fontFamily={fontFamily}
-                    fontWeight="bold"
+                    fontWeight={line.isBold !== false ? "bold" : "normal"}
                     fontSize={line.finalFontSize}
                     fill={textColor}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontStyle={line.text.includes('!') ? 'italic' : 'normal'}
+                    fontStyle={line.isItalic ? 'italic' : 'normal'}
                   >
                     {line.text}
                   </text>
