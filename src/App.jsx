@@ -1,0 +1,269 @@
+import React, { useState } from 'react';
+import { 
+  PanelLeftClose, 
+  PanelLeftOpen, 
+  Plus, 
+  Trash2, 
+  Printer, 
+  Download,
+  Palette,
+  Maximize,
+  AlignJustify
+} from 'lucide-react';
+
+const SWATCHES = [
+  { label: 'Đỏ', value: '#FF0000' },
+  { label: 'Vàng', value: '#FFFF00' },
+  { label: 'Đen', value: '#000000' },
+  { label: 'Xanh dương', value: '#0000FF' },
+  { label: 'Trắng', value: '#FFFFFF' },
+];
+
+export default function OvalBannerEditor() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  const [bgColor, setBgColor] = useState('#FF0000');
+  const [textColor, setTextColor] = useState('#FFFF00');
+  const [ovalScale, setOvalScale] = useState(95); 
+  const [lineSpacing, setLineSpacing] = useState(1.2); 
+  
+  const [lines, setLines] = useState([
+    { id: 1, text: 'CÔNG TY TNHH PHÁT TÀI', scale: 100 },
+    { id: 2, text: 'CHÚC MỪNG KHAI TRƯƠNG HỒNG PHÁT', scale: 100 },
+  ]);
+
+  const addLine = () => setLines([...lines, { id: Date.now(), text: '', scale: 100 }]);
+  const removeLine = (id) => setLines(lines.filter(l => l.id !== id));
+  
+  const updateLine = (id, field, value) => {
+    setLines(lines.map(l => {
+      if (l.id === id) {
+        let val = value;
+        if (field === 'text') val = val.toUpperCase();
+        return { ...l, [field]: val };
+      }
+      return l;
+    }));
+  };
+
+  const handlePrint = () => window.print();
+
+  const handleDownloadPDF = () => {
+    alert("Để tải PDF với chất lượng tốt nhất, vui lòng bấm 'In trực tiếp' (hoặc Ctrl+P) và chọn máy in là 'Save as PDF' (Lưu dưới dạng PDF) của trình duyệt.");
+  };
+
+  const SVG_WIDTH = 297;
+  const SVG_HEIGHT = 210;
+  const CENTER_X = SVG_WIDTH / 2;
+  const CENTER_Y = SVG_HEIGHT / 2;
+
+  const maxRx = (SVG_WIDTH / 2) - 5; 
+  const maxRy = (SVG_HEIGHT / 2) - 5;
+  const rx = (maxRx * ovalScale) / 100;
+  const ry = (maxRy * ovalScale) / 100;
+
+  const baseFontSize = 14; 
+  const totalLines = lines.length;
+  const spacingUnit = baseFontSize * lineSpacing; 
+  const totalTextHeight = (totalLines - 1) * spacingUnit;
+  const startY = CENTER_Y - (totalTextHeight / 2);
+
+  return (
+    <div className="flex h-screen w-full bg-slate-100 overflow-hidden font-sans">
+      <div 
+        className={`bg-white border-r border-slate-200 flex flex-col transition-all duration-500 ease-in-out z-10 hide-on-print shadow-[4px_0_24px_rgba(0,0,0,0.05)] ${
+          isSidebarOpen ? 'w-[30%] min-w-[340px] opacity-100' : 'w-0 min-w-0 overflow-hidden border-none opacity-0'
+        }`}
+      >
+        <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
+          <h2 className="text-2xl font-bold mb-8 text-slate-800 tracking-tight">Thiệp Hoa</h2>
+          
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-100">
+                <Palette size={18} />
+                <h3 className="text-sm font-bold uppercase tracking-wider">Màu sắc</h3>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <label className="text-sm font-medium text-slate-700">Màu nền Ovan</label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1.5 mr-2">
+                      {SWATCHES.map(s => (
+                        <button 
+                          key={`bg-${s.value}`}
+                          onClick={() => setBgColor(s.value)}
+                          className={`w-6 h-6 rounded-full border shadow-sm transition-transform hover:scale-110 ${bgColor === s.value ? 'ring-2 ring-blue-500 ring-offset-2 border-transparent' : 'border-slate-300'}`}
+                          style={{ backgroundColor: s.value }}
+                          title={s.label}
+                        />
+                      ))}
+                    </div>
+                    <input 
+                      type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)}
+                      className="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <label className="text-sm font-medium text-slate-700">Màu chữ</label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1.5 mr-2">
+                      {SWATCHES.map(s => (
+                        <button 
+                          key={`text-${s.value}`}
+                          onClick={() => setTextColor(s.value)}
+                          className={`w-6 h-6 rounded-full border shadow-sm transition-transform hover:scale-110 ${textColor === s.value ? 'ring-2 ring-blue-500 ring-offset-2 border-transparent' : 'border-slate-300'}`}
+                          style={{ backgroundColor: s.value }}
+                          title={s.label}
+                        />
+                      ))}
+                    </div>
+                    <input 
+                      type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)}
+                      className="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-100">
+                <Maximize size={18} />
+                <h3 className="text-sm font-bold uppercase tracking-wider">Kích thước & Bố cục</h3>
+              </div>
+              
+              <div className="space-y-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm font-medium text-slate-700">
+                    <label>Kích thước Ovan</label>
+                    <span className="text-blue-600 bg-blue-100 px-2 rounded">{ovalScale}%</span>
+                  </div>
+                  <input type="range" min="50" max="100" value={ovalScale} onChange={(e) => setOvalScale(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm font-medium text-slate-700">
+                    <label>Khoảng cách dòng</label>
+                    <span className="text-blue-600 bg-blue-100 px-2 rounded">{lineSpacing}</span>
+                  </div>
+                  <input type="range" min="0.5" max="3.0" step="0.1" value={lineSpacing} onChange={(e) => setLineSpacing(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-2 text-slate-700">
+                  <AlignJustify size={18} />
+                  <h3 className="text-sm font-bold uppercase tracking-wider">Văn bản</h3>
+                </div>
+                <button onClick={addLine} className="text-xs font-medium flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md hover:bg-blue-200 transition-colors">
+                  <Plus size={14} /> Thêm dòng
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {lines.map((line, index) => (
+                  <div key={line.id} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm space-y-3 transition hover:border-blue-300 hover:shadow-md">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-xs font-bold text-slate-500">
+                        {index + 1}
+                      </div>
+                      <input 
+                        type="text" value={line.text} onChange={(e) => updateLine(line.id, 'text', e.target.value)}
+                        placeholder="Nhập nội dung..."
+                        className="flex-1 text-sm border-b border-slate-200 px-1 py-1 focus:outline-none focus:border-blue-500 uppercase font-semibold text-slate-800 bg-transparent"
+                      />
+                      <button onClick={() => removeLine(line.id)} className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors" title="Xóa dòng này">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3 pl-8">
+                      <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Size %:</span>
+                      <input type="range" min="50" max="250" value={line.scale} onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600" />
+                      <span className="text-xs font-bold text-slate-600 w-8 text-right">{line.scale}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5 border-t border-slate-200 bg-white space-y-3 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+          <button onClick={handlePrint} className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-600/20 font-semibold text-sm">
+            <Printer size={18} /> In trực tiếp
+          </button>
+          <button onClick={handleDownloadPDF} className="w-full flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-300 py-2.5 rounded-lg hover:bg-slate-50 transition shadow-sm font-semibold text-sm">
+            <Download size={18} /> Tải PDF
+          </button>
+        </div>
+      </div>
+
+      <div className={`relative transition-all duration-500 ease-in-out flex flex-col items-center justify-center preview-container ${isSidebarOpen ? 'w-[70%]' : 'w-full'}`}>
+        
+        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`absolute top-1/2 -translate-y-1/2 bg-white p-2.5 rounded-r-xl shadow-[4px_0_15px_rgba(0,0,0,0.1)] border border-l-0 border-slate-200 text-slate-500 hover:text-blue-600 z-20 hide-on-print transition-all duration-500 ${isSidebarOpen ? 'left-0' : 'left-0'}`} title={isSidebarOpen ? "Thu gọn bảng điều khiển" : "Mở rộng bảng điều khiển"}>
+          {isSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeftOpen size={24} />}
+        </button>
+
+        <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] print-paper w-[90%] max-w-[1200px] aspect-[297/210] relative flex items-center justify-center border border-slate-200 overflow-hidden">
+          
+          <svg viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+            <ellipse cx={CENTER_X} cy={CENTER_Y} rx={rx} ry={ry} fill={bgColor} />
+
+            {lines.map((line, index) => {
+              const yPos = startY + (index * spacingUnit);
+              const dy = Math.abs(yPos - CENTER_Y);
+              let safeWidth = 0;
+              
+              if (dy < ry) {
+                const dx = rx * Math.sqrt(1 - Math.pow(dy / ry, 2));
+                safeWidth = (dx * 2) * 0.9;
+              }
+
+              const fontSize = baseFontSize * (line.scale / 100);
+              const approxTextWidth = line.text.length * (fontSize * 0.55); 
+              const shouldFit = approxTextWidth > safeWidth && safeWidth > 0;
+
+              if (safeWidth > 0 && line.text.trim().length > 0) {
+                return (
+                  <text
+                    key={line.id}
+                    x={CENTER_X}
+                    y={yPos}
+                    fontFamily='"Times New Roman", Times, serif'
+                    fontWeight="bold"
+                    fontSize={fontSize}
+                    fill={textColor}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    textLength={shouldFit ? safeWidth : undefined}
+                    lengthAdjust={shouldFit ? "spacingAndGlyphs" : undefined}
+                  >
+                    {line.text}
+                  </text>
+                );
+              }
+              return null;
+            })}
+          </svg>
+        </div>
+      </div>
+
+      <style>{`
+        @media print {
+          @page { size: A4 landscape; margin: 0; }
+          body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0; padding: 0; }
+          .hide-on-print { display: none !important; }
+          .preview-container { width: 100% !important; height: 100vh !important; display: block !important; padding: 0 !important; margin: 0 !important; }
+          .print-paper { width: 100% !important; max-width: none !important; height: 100vh !important; box-shadow: none !important; margin: 0 !important; border: none !important; aspect-ratio: auto !important; }
+          .print-paper svg { width: 100vw !important; height: 100vh !important; }
+        }
+      `}</style>
+    </div>
+  );
+}
