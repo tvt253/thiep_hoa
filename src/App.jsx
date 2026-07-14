@@ -33,6 +33,7 @@ const THEMES = [
     bgColor: '#FF0000',
     textColor: '#FFFF00',
     border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
+    cloudColors: ['#8B0000', '#FF0000'],
     lines: [
       { id: 1, text: 'CÔ LINH TIẾNG TRUNG', scale: 100 },
       { id: 2, text: 'CHÚC MỪNG', scale: 100 },
@@ -45,6 +46,7 @@ const THEMES = [
     bgColor: '#FFFFFF',
     textColor: '#FF0000',
     border: { type: 'single', color: '#FF0000', padding: 4, width: 2 },
+    cloudColors: ['#FF0000', '#FFFFFF'],
     lines: [
       { id: 1, text: 'GIA ĐÌNH ANH THÔNG', scale: 100 },
       { id: 2, text: 'CHÚC MỪNG KHAI TRƯƠNG', scale: 100, isItalic: true }
@@ -56,6 +58,7 @@ const THEMES = [
     bgColor: '#FF0000',
     textColor: '#FFFFFF',
     border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
+    cloudColors: ['#8B0000', '#FF0000'],
     lines: [
       { id: 1, text: 'GIA ĐÌNH EM SƠN', scale: 100 },
       { id: 2, text: 'CHÚC MỪNG SINH NHẬT', scale: 100 }
@@ -67,6 +70,7 @@ const THEMES = [
     bgColor: '#FFFF00',
     textColor: '#FF0000',
     border: { type: 'single', color: '#FF0000', padding: 4, width: 2 },
+    cloudColors: ['#FF9900', '#FFFF00'],
     lines: [
       { id: 1, text: 'SỞ VĂN HÓA, THỂ THAO', scale: 100 },
       { id: 2, text: 'VÀ DU LỊCH TỈNH QUẢNG TRỊ', scale: 100 },
@@ -79,6 +83,7 @@ const THEMES = [
     bgColor: '#000000',
     textColor: '#FFFFFF',
     border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
+    cloudColors: ['#333333', '#000000'],
     lines: [
       { id: 1, text: 'GIA ĐÌNH THÔNG GIA', scale: 100 },
       { id: 2, text: 'QUÂN HƯƠNG', scale: 100 },
@@ -166,7 +171,8 @@ export default function OvalBannerEditor() {
 
   const baseFontSize = 14; 
   
-  const maxAllowedHeight = (ry * 2) * 0.85;
+  const CLOUD_STROKE_WIDTH = 36;
+  const maxAllowedHeight = activeShape === 'cloud' ? (ry * 2) - CLOUD_STROKE_WIDTH * 1.5 : (ry * 2) * 0.85;
 
   let baseMetrics = lines.map(line => {
     const isBold = line.isBold !== false;
@@ -222,9 +228,14 @@ export default function OvalBannerEditor() {
       const visualHeight = m.finalFontSize * 0.75;
       const dy = Math.abs(yPos - CENTER_Y) + (visualHeight / 2);
       let safeWidth = 0;
-      if (dy < innerRy) {
-        const dx = innerRx * Math.sqrt(1 - Math.pow(dy / innerRy, 2));
-        safeWidth = (dx * 2) * 0.98;
+      
+      if (activeShape === 'cloud') {
+         safeWidth = (rx * 2) - CLOUD_STROKE_WIDTH * 1.5;
+      } else {
+         if (dy < innerRy) {
+           const dx = innerRx * Math.sqrt(1 - Math.pow(dy / innerRy, 2));
+           safeWidth = (dx * 2) * 0.98;
+         }
       }
 
       const currentExactWidth = m.baseExactWidth * (m.finalFontSize / baseFontSize);
@@ -328,9 +339,14 @@ export default function OvalBannerEditor() {
     const visualHeight = m.finalFontSize * 0.75;
     const maxDy = Math.abs(m.finalYPos - CENTER_Y) + (visualHeight / 2);
     let safeWidth = 0;
-    if (maxDy < innerRy) {
-      const dx = innerRx * Math.sqrt(1 - Math.pow(maxDy / innerRy, 2));
-      safeWidth = (dx * 2) * 0.98;
+    
+    if (activeShape === 'cloud') {
+       safeWidth = (rx * 2) - CLOUD_STROKE_WIDTH * 1.5;
+    } else {
+       if (maxDy < innerRy) {
+         const dx = innerRx * Math.sqrt(1 - Math.pow(maxDy / innerRy, 2));
+         safeWidth = (dx * 2) * 0.98;
+       }
     }
     
     const actualWidth = m.baseExactWidth * (m.finalFontSize / baseFontSize);
@@ -408,6 +424,7 @@ export default function OvalBannerEditor() {
                       className="w-full text-sm font-semibold border border-slate-200 rounded p-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     >
                       <option value="oval">Hình Ovan</option>
+                      <option value="cloud">Hình Đám Mây</option>
                       <option value="placeholder_1" disabled>Hình chữ nhật (Sắp ra mắt)</option>
                       <option value="placeholder_2" disabled>Hình thoi (Sắp ra mắt)</option>
                     </select>
@@ -636,55 +653,110 @@ export default function OvalBannerEditor() {
         <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] print-paper w-[90%] max-w-[1200px] aspect-[297/210] relative flex items-center justify-center border border-slate-200 overflow-hidden">
           
           <svg viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-            <ellipse cx={CENTER_X} cy={CENTER_Y} rx={rx} ry={ry} fill={bgColor} />
-
-            {currentBorder && currentBorder.type === 'single' && (
-              <ellipse 
-                cx={CENTER_X} cy={CENTER_Y} 
-                rx={Math.max(0, rx - currentBorder.padding)} 
-                ry={Math.max(0, ry - currentBorder.padding)} 
-                fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.width} 
-              />
-            )}
             
-            {currentBorder && currentBorder.type === 'double' && (
+            {activeShape === 'oval' && (
               <>
-                <ellipse 
-                  cx={CENTER_X} cy={CENTER_Y} 
-                  rx={Math.max(0, rx - currentBorder.padding - (currentBorder.outerWidth/2))} 
-                  ry={Math.max(0, ry - currentBorder.padding - (currentBorder.outerWidth/2))} 
-                  fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.outerWidth} 
-                />
-                <ellipse 
-                  cx={CENTER_X} cy={CENTER_Y} 
-                  rx={Math.max(0, rx - currentBorder.padding - currentBorder.outerWidth - currentBorder.gap - (currentBorder.innerWidth/2))} 
-                  ry={Math.max(0, ry - currentBorder.padding - currentBorder.outerWidth - currentBorder.gap - (currentBorder.innerWidth/2))} 
-                  fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.innerWidth} 
-                />
+                <ellipse cx={CENTER_X} cy={CENTER_Y} rx={rx} ry={ry} fill={bgColor} />
+
+                {currentBorder && currentBorder.type === 'single' && (
+                  <ellipse 
+                    cx={CENTER_X} cy={CENTER_Y} 
+                    rx={Math.max(0, rx - currentBorder.padding)} 
+                    ry={Math.max(0, ry - currentBorder.padding)} 
+                    fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.width} 
+                  />
+                )}
+                
+                {currentBorder && currentBorder.type === 'double' && (
+                  <>
+                    <ellipse 
+                      cx={CENTER_X} cy={CENTER_Y} 
+                      rx={Math.max(0, rx - currentBorder.padding - (currentBorder.outerWidth/2))} 
+                      ry={Math.max(0, ry - currentBorder.padding - (currentBorder.outerWidth/2))} 
+                      fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.outerWidth} 
+                    />
+                    <ellipse 
+                      cx={CENTER_X} cy={CENTER_Y} 
+                      rx={Math.max(0, rx - currentBorder.padding - currentBorder.outerWidth - currentBorder.gap - (currentBorder.innerWidth/2))} 
+                      ry={Math.max(0, ry - currentBorder.padding - currentBorder.outerWidth - currentBorder.gap - (currentBorder.innerWidth/2))} 
+                      fill="none" stroke={currentBorder.color} strokeWidth={currentBorder.innerWidth} 
+                    />
+                  </>
+                )}
+
+                {lineMetrics.map((line) => {
+                  if (line.text.trim().length > 0) {
+                    return (
+                      <text
+                        key={line.id}
+                        x={CENTER_X}
+                        y={line.finalYPos}
+                        fontFamily={fontFamily}
+                        fontWeight={line.isBold !== false ? "bold" : "normal"}
+                        fontSize={line.finalFontSize}
+                        fill={textColor}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fontStyle={line.isItalic ? 'italic' : 'normal'}
+                      >
+                        {line.text}
+                      </text>
+                    );
+                  }
+                  return null;
+                })}
               </>
             )}
 
-            {lineMetrics.map((line) => {
-              if (line.text.trim().length > 0) {
-                return (
-                  <text
-                    key={line.id}
-                    x={CENTER_X}
-                    y={line.finalYPos}
-                    fontFamily={fontFamily}
-                    fontWeight={line.isBold !== false ? "bold" : "normal"}
-                    fontSize={line.finalFontSize}
-                    fill={textColor}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fontStyle={line.isItalic ? 'italic' : 'normal'}
-                  >
-                    {line.text}
-                  </text>
-                );
-              }
-              return null;
-            })}
+            {activeShape === 'cloud' && (
+              <>
+                <defs>
+                  <g id="text-cloud-group">
+                    {lineMetrics.map((line) => {
+                      if (line.text.trim().length > 0) {
+                        return (
+                          <text
+                            key={line.id}
+                            x={CENTER_X}
+                            y={line.finalYPos}
+                            fontFamily={fontFamily}
+                            fontWeight={line.isBold !== false ? "bold" : "normal"}
+                            fontStyle={line.isItalic ? 'italic' : 'normal'}
+                            fontSize={line.finalFontSize}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                          >
+                            {line.text}
+                          </text>
+                        );
+                      }
+                      return null;
+                    })}
+                  </g>
+                </defs>
+
+                {(() => {
+                  const currentTheme = THEMES.find(t => t.id === activeThemeId);
+                  const colors = currentTheme?.cloudColors || [currentBorder?.color || '#000', bgColor];
+                  return colors.map((color, index) => {
+                    const width = CLOUD_STROKE_WIDTH + (colors.length - 1 - index) * 12;
+                    return (
+                      <use 
+                        key={`cloud-layer-${index}`}
+                        href="#text-cloud-group" 
+                        fill={color} 
+                        stroke={color} 
+                        strokeWidth={width} 
+                        strokeLinejoin="round" 
+                        strokeLinecap="round" 
+                      />
+                    );
+                  });
+                })()}
+
+                <use href="#text-cloud-group" fill={textColor} />
+              </>
+            )}
           </svg>
         </div>
       </div>
