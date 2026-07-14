@@ -231,11 +231,41 @@ export default function OvalBannerEditor() {
         const effectiveSizes = currentMetrics.map(l => l.finalFontSize * l.hRatio);
         const minSize = Math.min(...effectiveSizes);
         const maxAllowedSize = minSize * 1.5;
+        
+        const naturalStates = currentMetrics.map(l => {
+           let naturalSize = l.finalFontSize * l.hRatio;
+           if (naturalSize > maxAllowedSize) naturalSize = maxAllowedSize;
+           let renderedWidth = l.baseExactWidth * (naturalSize / baseFontSize);
+           return { id: l.id, baseExactWidth: l.baseExactWidth, naturalSize, renderedWidth };
+        });
 
         currentMetrics = currentMetrics.map(l => {
-           let size = l.finalFontSize * l.hRatio;
-           l.harmonyRatio = size > maxAllowedSize ? (maxAllowedSize / size) : 1;
-           return l;
+           let maxAllowedWidth = Infinity;
+           naturalStates.forEach(other => {
+              if (other.baseExactWidth >= l.baseExactWidth - 0.1) {
+                 if (other.renderedWidth < maxAllowedWidth) {
+                    maxAllowedWidth = other.renderedWidth;
+                 }
+              }
+           });
+           
+           let finalRenderedWidth = naturalStates.find(s => s.id === l.id).renderedWidth;
+           if (finalRenderedWidth > maxAllowedWidth) {
+              finalRenderedWidth = maxAllowedWidth;
+           }
+           
+           let requiredSize = baseFontSize;
+           if (l.baseExactWidth > 0) {
+              requiredSize = (finalRenderedWidth * baseFontSize) / l.baseExactWidth;
+           }
+           
+           let naturalSizeRaw = l.finalFontSize * l.hRatio;
+           let harmonyRatio = 1;
+           if (naturalSizeRaw > 0) {
+              harmonyRatio = requiredSize / naturalSizeRaw;
+           }
+           
+           return { ...l, harmonyRatio };
         });
       } else {
         currentMetrics = currentMetrics.map(l => ({ ...l, harmonyRatio: 1 }));
