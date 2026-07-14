@@ -40,6 +40,17 @@ const THEMES = [
     ]
   },
   {
+    id: 'khai_truong_trang',
+    name: 'Khai trương (Trắng)',
+    bgColor: '#FFFFFF',
+    textColor: '#FF0000',
+    border: { type: 'single', color: '#FF0000', padding: 4, width: 2 },
+    lines: [
+      { id: 1, text: 'GIA ĐÌNH ANH THÔNG', scale: 100 },
+      { id: 2, text: 'CHÚC MỪNG KHAI TRƯƠNG', scale: 100, isItalic: true }
+    ]
+  },
+  {
     id: 'sinh_nhat',
     name: 'Sinh nhật',
     bgColor: '#FF0000',
