@@ -370,14 +370,14 @@ export default function OvalBannerEditor() {
           isSidebarOpen ? 'w-[30%] min-w-[340px] opacity-100' : 'w-0 min-w-0 overflow-hidden border-none opacity-0'
         }`}
       >
-        <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
-          <h2 className="text-2xl font-bold mb-8 text-slate-800 tracking-tight">Thiệp Hoa</h2>
+        <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
+          <h2 className="text-xl font-bold mb-4 text-slate-800 tracking-tight">Thiệp Hoa</h2>
           
-          <div className="space-y-8">
+          <div className="space-y-4">
             <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
               <button 
                 onClick={() => setIsTemplateOpen(!isTemplateOpen)}
-                className="w-full flex items-center justify-between p-3 bg-white hover:bg-slate-50 transition-colors text-slate-700 font-semibold text-sm border-b border-transparent"
+                className="w-full flex items-center justify-between p-2.5 bg-white hover:bg-slate-50 transition-colors text-slate-700 font-semibold text-sm border-b border-transparent"
                 style={{ borderBottomColor: isTemplateOpen ? '#e2e8f0' : 'transparent' }}
               >
                 <div className="flex items-center gap-2">
@@ -387,7 +387,7 @@ export default function OvalBannerEditor() {
                 {isTemplateOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               
-              <div className={`transition-all duration-300 ease-in-out ${isTemplateOpen ? 'max-h-[1000px] opacity-100 p-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+              <div className={`transition-all duration-300 ease-in-out ${isTemplateOpen ? 'max-h-[1000px] opacity-100 p-3' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-slate-700">Hình dáng mẫu</label>
@@ -422,7 +422,7 @@ export default function OvalBannerEditor() {
             <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
               <button 
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                className="w-full flex items-center justify-between p-3 bg-white hover:bg-slate-50 transition-colors text-slate-700 font-semibold text-sm border-b border-transparent"
+                className="w-full flex items-center justify-between p-2.5 bg-white hover:bg-slate-50 transition-colors text-slate-700 font-semibold text-sm border-b border-transparent"
                 style={{ borderBottomColor: isSettingsOpen ? '#e2e8f0' : 'transparent' }}
               >
                 <div className="flex items-center gap-2">
@@ -432,8 +432,8 @@ export default function OvalBannerEditor() {
                 {isSettingsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
 
-              <div className={`transition-all duration-300 ease-in-out ${isSettingsOpen ? 'max-h-[1000px] opacity-100 p-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <div className="space-y-6">
+              <div className={`transition-all duration-300 ease-in-out ${isSettingsOpen ? 'max-h-[1000px] opacity-100 p-3' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-200">
                       <Palette size={16} />
@@ -491,7 +491,7 @@ export default function OvalBannerEditor() {
                       <h3 className="text-xs font-bold uppercase tracking-wider">Kích thước & Bố cục</h3>
                     </div>
                     
-                    <div className="space-y-4 bg-white p-3 rounded border border-slate-200 shadow-sm">
+                    <div className="space-y-3 bg-white p-2.5 rounded border border-slate-200 shadow-sm">
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-xs font-medium text-slate-700">
                           <label>Kích thước Ngang (%)</label>
@@ -534,12 +534,12 @@ export default function OvalBannerEditor() {
               </div>
 
               <div className="space-y-3">
-                <div className="space-y-1.5 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                  <label className="text-xs font-medium text-slate-700">Font chữ hiển thị</label>
+                <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
+                  <label className="text-xs font-medium text-slate-700 whitespace-nowrap mr-2">Font chữ:</label>
                   <select 
                     value={fontFamily} 
                     onChange={(e) => setFontFamily(e.target.value)}
-                    className="w-full text-sm font-medium border border-slate-200 rounded p-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="flex-1 text-sm font-medium border border-slate-200 rounded p-1.5 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   >
                     <option value='"Times New Roman", Times, serif'>Times New Roman</option>
                     <option value='Arial, Helvetica, sans-serif'>Arial</option>
@@ -548,7 +548,7 @@ export default function OvalBannerEditor() {
                   </select>
                 </div>
                 {lineMetrics.map((line, index) => (
-                  <div key={line.id} className={`bg-white p-3 rounded-lg border shadow-sm space-y-3 transition hover:shadow-md ${!autoFit && line.isClamped ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-200 hover:border-blue-300'}`}>
+                  <div key={line.id} className={`bg-white p-2.5 rounded-lg border shadow-sm space-y-2 transition hover:shadow-md ${!autoFit && line.isClamped ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-200 hover:border-blue-300'}`}>
                     <div className="flex items-center gap-2">
                       <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${!autoFit && line.isClamped ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500'}`}>
                         {index + 1}
@@ -578,7 +578,7 @@ export default function OvalBannerEditor() {
                         <Italic size={14} strokeWidth={line.isItalic ? 3 : 2} />
                       </button>
 
-                      <span className="text-xs font-medium text-slate-500 whitespace-nowrap ml-1">Size %:</span>
+                      <span className="text-xs font-medium text-slate-500 whitespace-nowrap ml-1 hidden lg:inline">Size %:</span>
                       <input 
                         type="range" min="50" max="250" 
                         value={autoFit ? Math.round((line.finalFontSize / baseFontSize) * 100) : line.scale} 
