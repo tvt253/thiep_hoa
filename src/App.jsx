@@ -179,7 +179,7 @@ export default function OvalBannerEditor() {
     let totalHeight = currentMetrics.reduce((sum, m) => sum + m.finalHeight, 0);
     
     let verticalRatio = 1;
-    if (autoFit && totalHeight > maxAllowedHeight) {
+    if (totalHeight > maxAllowedHeight) {
       verticalRatio = maxAllowedHeight / totalHeight;
     }
 
@@ -208,7 +208,7 @@ export default function OvalBannerEditor() {
       const innerRx = Math.max(1, rx - borderOffset);
       const innerRy = Math.max(1, ry - borderOffset);
 
-      const dy = Math.abs(yPos - CENTER_Y);
+      const dy = Math.abs(yPos - CENTER_Y) + (m.finalHeight / 2);
       let safeWidth = 0;
       if (dy < innerRy) {
         const dx = innerRx * Math.sqrt(1 - Math.pow(dy / innerRy, 2));
@@ -217,48 +217,89 @@ export default function OvalBannerEditor() {
 
       const currentExactWidth = m.originalExactWidth * (m.finalFontSize / m.originalFontSize);
       let hRatio = 1;
-      if (autoFit && safeWidth > 0 && currentExactWidth > 0) {
+      if (safeWidth > 0 && currentExactWidth > 0) {
         hRatio = safeWidth / currentExactWidth;
       }
       
       return { ...m, finalYPos: yPos, safeWidth, hRatio };
     });
 
-    if (autoFit && currentMetrics.length > 1) {
-      const effectiveSizes = currentMetrics.map(l => l.finalFontSize * l.hRatio);
-      const minSize = Math.min(...effectiveSizes);
-      const maxAllowedSize = minSize * 1.5;
+    if (autoFit) {
+      if (currentMetrics.length > 1) {
+        const effectiveSizes = currentMetrics.map(l => l.finalFontSize * l.hRatio);
+        const minSize = Math.min(...effectiveSizes);
+        const maxAllowedSize = minSize * 1.5;
 
-      currentMetrics = currentMetrics.map(l => {
-         let size = l.finalFontSize * l.hRatio;
-         l.harmonyRatio = size > maxAllowedSize ? (maxAllowedSize / size) : 1;
-         return l;
-      });
+        currentMetrics = currentMetrics.map(l => {
+           let size = l.finalFontSize * l.hRatio;
+           l.harmonyRatio = size > maxAllowedSize ? (maxAllowedSize / size) : 1;
+           return l;
+        });
+      } else {
+        currentMetrics = currentMetrics.map(l => ({ ...l, harmonyRatio: 1 }));
+      }
     } else {
-      currentMetrics = currentMetrics.map(l => ({ ...l, harmonyRatio: 1 }));
+      let minHRatio = Math.min(...currentMetrics.map(m => m.hRatio));
+      if (minHRatio > 1) minHRatio = 1;
+      currentMetrics = currentMetrics.map(l => ({ ...l, hRatio: minHRatio, harmonyRatio: 1 }));
     }
 
     currentMetrics = currentMetrics.map(m => {
       let newFontSize = m.finalFontSize * m.hRatio * m.harmonyRatio;
       const newHeight = newFontSize * lineSpacing;
 
-      const requestedFontSize = baseFontSize * (m.scale / 100);
-      let isClamped = false;
-      let clampedScale = m.scale;
-      if (autoFit && newFontSize < requestedFontSize * 0.99) {
-        isClamped = true;
-        clampedScale = Math.floor((newFontSize / baseFontSize) * 100);
-      }
-
       return { 
          ...m, 
          finalFontSize: newFontSize, 
-         finalHeight: newHeight,
-         isClamped,
-         clampedScale
+         finalHeight: newHeight
       };
     });
   }
+
+  let finalShrink = 1;
+  currentMetrics.forEach(m => {
+    let borderOffset = 0;
+    if (currentBorder) {
+      if (currentBorder.type === 'single') borderOffset = currentBorder.padding + currentBorder.width;
+      if (currentBorder.type === 'double') borderOffset = currentBorder.padding + currentBorder.outerWidth + currentBorder.gap + currentBorder.innerWidth;
+    }
+    const innerRx = Math.max(1, rx - borderOffset);
+    const innerRy = Math.max(1, ry - borderOffset);
+    
+    const maxDy = Math.abs(m.finalYPos - CENTER_Y) + (m.finalHeight / 2);
+    let safeWidth = 0;
+    if (maxDy < innerRy) {
+      const dx = innerRx * Math.sqrt(1 - Math.pow(maxDy / innerRy, 2));
+      safeWidth = (dx * 2) * 0.95;
+    }
+    
+    const actualWidth = m.originalExactWidth * (m.finalFontSize / m.originalFontSize);
+    if (actualWidth > safeWidth && actualWidth > 0 && safeWidth > 0) {
+      const shrink = safeWidth / actualWidth;
+      if (shrink < finalShrink) finalShrink = shrink;
+    }
+  });
+
+  currentMetrics = currentMetrics.map(m => {
+    let newFontSize = m.finalFontSize * finalShrink;
+    const newHeight = m.finalHeight * finalShrink;
+
+    const requestedFontSize = baseFontSize * (m.scale / 100);
+    let isClamped = false;
+    let clampedScale = m.scale;
+    if (newFontSize < requestedFontSize * 0.99) {
+      isClamped = true;
+      clampedScale = Math.floor((newFontSize / baseFontSize) * 100);
+    }
+
+    return { 
+        ...m, 
+        finalFontSize: newFontSize, 
+        finalHeight: newHeight,
+        isClamped,
+        clampedScale
+    };
+  });
 
   // letter-spacing stretch removed
 
