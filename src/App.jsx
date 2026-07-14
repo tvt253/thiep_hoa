@@ -112,6 +112,7 @@ export default function OvalBannerEditor() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTemplateOpen, setIsTemplateOpen] = useState(true);
+  const [activeMobileTab, setActiveMobileTab] = useState('template');
   
   const [fontFamily, setFontFamily] = useState('"Times New Roman", Times, serif');
   
@@ -392,17 +393,17 @@ export default function OvalBannerEditor() {
   // syncSizes removed
 
   return (
-    <div className="flex h-screen w-full bg-slate-100 overflow-hidden font-sans">
+    <div className="flex flex-col lg:flex-row h-screen w-full bg-slate-100 overflow-hidden font-sans">
       <div 
-        className={`bg-white border-r border-slate-200 flex flex-col transition-all duration-500 ease-in-out z-10 hide-on-print shadow-[4px_0_24px_rgba(0,0,0,0.05)] ${
-          isSidebarOpen ? 'w-[30%] min-w-[340px] opacity-100' : 'w-0 min-w-0 overflow-hidden border-none opacity-0'
+        className={`bg-white border-r border-slate-200 flex flex-col transition-all duration-500 ease-in-out z-10 hide-on-print shadow-[4px_0_24px_rgba(0,0,0,0.05)] order-2 lg:order-1 ${
+          isSidebarOpen ? 'w-full lg:w-[30%] lg:min-w-[340px] h-[60vh] lg:h-screen opacity-100' : 'w-0 min-w-0 overflow-hidden border-none opacity-0'
         }`}
       >
-        <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
-          <h2 className="text-xl font-bold mb-4 text-slate-800 tracking-tight">Thiệp Hoa</h2>
+        <div className="p-4 flex-1 overflow-y-auto custom-scrollbar pb-24 lg:pb-4">
+          <h2 className="text-xl font-bold mb-4 text-slate-800 tracking-tight hidden lg:block">Thiệp Hoa</h2>
           
           <div className="space-y-4">
-            <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+            <div className={`bg-slate-50 border border-slate-200 rounded-lg overflow-hidden ${activeMobileTab !== 'template' ? 'hidden lg:block' : ''}`}>
               <button 
                 onClick={() => setIsTemplateOpen(!isTemplateOpen)}
                 className="w-full flex items-center justify-between p-2.5 bg-white hover:bg-slate-50 transition-colors text-slate-700 font-semibold text-sm border-b border-transparent"
@@ -448,7 +449,89 @@ export default function OvalBannerEditor() {
                 </div>
               </div>
             </div>
-            <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+            <div className={`space-y-4 ${activeMobileTab !== 'text' ? 'hidden lg:block' : ''}`}>
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-2 text-slate-700">
+                  <AlignJustify size={18} />
+                  <h3 className="text-sm font-bold uppercase tracking-wider">Nội dung</h3>
+                </div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 cursor-pointer bg-slate-50 px-2.5 py-1.5 rounded hover:bg-slate-100 transition-colors border border-slate-200">
+                  <input type="checkbox" checked={autoFit} onChange={(e) => setAutoFit(e.target.checked)} className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500" />
+                  Tự động vừa khung
+                </label>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
+                  <label className="text-xs font-medium text-slate-700 whitespace-nowrap mr-2">Font chữ:</label>
+                  <select 
+                    value={fontFamily} 
+                    onChange={(e) => setFontFamily(e.target.value)}
+                    className="flex-1 text-sm font-medium border border-slate-200 rounded p-1.5 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value='"Times New Roman", Times, serif'>Times New Roman</option>
+                    <option value='Arial, Helvetica, sans-serif'>Arial</option>
+                    <option value='"Courier New", Courier, monospace'>Courier New</option>
+                    <option value='Tahoma, Geneva, sans-serif'>Tahoma</option>
+                  </select>
+                </div>
+                {lineMetrics.map((line, index) => (
+                  <div key={line.id} className={`bg-white p-2.5 rounded-lg border shadow-sm space-y-2 transition hover:shadow-md ${!autoFit && line.isClamped ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-200 hover:border-blue-300'}`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${!autoFit && line.isClamped ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500'}`}>
+                        {index + 1}
+                      </div>
+                      <input 
+                        type="text" value={line.text} onChange={(e) => updateLine(line.id, 'text', e.target.value)}
+                        placeholder="Nhập nội dung..."
+                        className="flex-1 text-sm border-b border-slate-200 px-1 py-1 focus:outline-none focus:border-blue-500 uppercase font-semibold text-slate-800 bg-transparent"
+                      />
+                      <button onClick={() => removeLine(line.id)} className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors" title="Xóa dòng này">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 pl-8">
+                      <button 
+                        onClick={() => updateLine(line.id, 'isBold', line.isBold === false ? true : false)} 
+                        className={`p-1.5 rounded transition-colors ${line.isBold !== false ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                        title="In đậm"
+                      >
+                        <Bold size={14} strokeWidth={line.isBold !== false ? 3 : 2} />
+                      </button>
+                      <button 
+                        onClick={() => updateLine(line.id, 'isItalic', !line.isItalic)} 
+                        className={`p-1.5 rounded transition-colors ${line.isItalic ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                        title="In nghiêng"
+                      >
+                        <Italic size={14} strokeWidth={line.isItalic ? 3 : 2} />
+                      </button>
+
+                      <span className="text-xs font-medium text-slate-500 whitespace-nowrap ml-1 hidden lg:inline">Size %:</span>
+                      <input 
+                        type="range" min="50" max="250" 
+                        value={autoFit ? Math.round((line.finalFontSize / baseFontSize) * 100) : line.scale} 
+                        onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} 
+                        disabled={autoFit}
+                        className={`w-20 h-1.5 rounded-lg appearance-none ${autoFit ? 'bg-slate-200 cursor-not-allowed opacity-60' : 'bg-slate-300 cursor-pointer accent-blue-600'}`} 
+                      />
+                      <div className="flex flex-col items-end w-8">
+                        <span className={`text-xs font-bold ${autoFit ? 'text-slate-400' : 'text-blue-600'}`}>
+                          {autoFit ? Math.round((line.finalFontSize / baseFontSize) * 100) : line.scale}%
+                        </span>
+                        {!autoFit && line.isClamped && <span className="text-[9px] text-orange-500 font-medium leading-none -mt-0.5" title="Bị giới hạn viền">Max: {line.clampedScale}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                <div className="pt-2 border-t border-slate-100 mt-2">
+                  <button onClick={addLine} className="w-full text-sm font-medium flex items-center justify-center gap-1 bg-blue-50 text-blue-700 px-3 py-2.5 rounded-md hover:bg-blue-100 transition-colors border border-dashed border-blue-300">
+                    <Plus size={16} /> Thêm dòng mới
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className={`bg-slate-50 border border-slate-200 rounded-lg overflow-hidden ${activeMobileTab !== 'settings' ? 'hidden lg:block' : ''}`}>
               <button 
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                 className="w-full flex items-center justify-between p-2.5 bg-white hover:bg-slate-50 transition-colors text-slate-700 font-semibold text-sm border-b border-transparent"
@@ -573,92 +656,21 @@ export default function OvalBannerEditor() {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <div className="flex items-center gap-2 text-slate-700">
-                  <AlignJustify size={18} />
-                  <h3 className="text-sm font-bold uppercase tracking-wider">Nội dung</h3>
-                </div>
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 cursor-pointer bg-slate-50 px-2.5 py-1.5 rounded hover:bg-slate-100 transition-colors border border-slate-200">
-                  <input type="checkbox" checked={autoFit} onChange={(e) => setAutoFit(e.target.checked)} className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500" />
-                  Tự động vừa khung
-                </label>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
-                  <label className="text-xs font-medium text-slate-700 whitespace-nowrap mr-2">Font chữ:</label>
-                  <select 
-                    value={fontFamily} 
-                    onChange={(e) => setFontFamily(e.target.value)}
-                    className="flex-1 text-sm font-medium border border-slate-200 rounded p-1.5 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  >
-                    <option value='"Times New Roman", Times, serif'>Times New Roman</option>
-                    <option value='Arial, Helvetica, sans-serif'>Arial</option>
-                    <option value='"Courier New", Courier, monospace'>Courier New</option>
-                    <option value='Tahoma, Geneva, sans-serif'>Tahoma</option>
-                  </select>
-                </div>
-                {lineMetrics.map((line, index) => (
-                  <div key={line.id} className={`bg-white p-2.5 rounded-lg border shadow-sm space-y-2 transition hover:shadow-md ${!autoFit && line.isClamped ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-200 hover:border-blue-300'}`}>
-                    <div className="flex items-center gap-2">
-                      <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${!autoFit && line.isClamped ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500'}`}>
-                        {index + 1}
-                      </div>
-                      <input 
-                        type="text" value={line.text} onChange={(e) => updateLine(line.id, 'text', e.target.value)}
-                        placeholder="Nhập nội dung..."
-                        className="flex-1 text-sm border-b border-slate-200 px-1 py-1 focus:outline-none focus:border-blue-500 uppercase font-semibold text-slate-800 bg-transparent"
-                      />
-                      <button onClick={() => removeLine(line.id)} className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors" title="Xóa dòng này">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-2 pl-8">
-                      <button 
-                        onClick={() => updateLine(line.id, 'isBold', line.isBold === false ? true : false)} 
-                        className={`p-1.5 rounded transition-colors ${line.isBold !== false ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
-                        title="In đậm"
-                      >
-                        <Bold size={14} strokeWidth={line.isBold !== false ? 3 : 2} />
-                      </button>
-                      <button 
-                        onClick={() => updateLine(line.id, 'isItalic', !line.isItalic)} 
-                        className={`p-1.5 rounded transition-colors ${line.isItalic ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
-                        title="In nghiêng"
-                      >
-                        <Italic size={14} strokeWidth={line.isItalic ? 3 : 2} />
-                      </button>
-
-                      <span className="text-xs font-medium text-slate-500 whitespace-nowrap ml-1 hidden lg:inline">Size %:</span>
-                      <input 
-                        type="range" min="50" max="250" 
-                        value={autoFit ? Math.round((line.finalFontSize / baseFontSize) * 100) : line.scale} 
-                        onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} 
-                        disabled={autoFit}
-                        className={`w-20 h-1.5 rounded-lg appearance-none ${autoFit ? 'bg-slate-200 cursor-not-allowed opacity-60' : 'bg-slate-300 cursor-pointer accent-blue-600'}`} 
-                      />
-                      <div className="flex flex-col items-end w-8">
-                        <span className={`text-xs font-bold ${autoFit ? 'text-slate-400' : 'text-blue-600'}`}>
-                          {autoFit ? Math.round((line.finalFontSize / baseFontSize) * 100) : line.scale}%
-                        </span>
-                        {!autoFit && line.isClamped && <span className="text-[9px] text-orange-500 font-medium leading-none -mt-0.5" title="Bị giới hạn viền">Max: {line.clampedScale}</span>}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                <div className="pt-2 border-t border-slate-100 mt-2">
-                  <button onClick={addLine} className="w-full text-sm font-medium flex items-center justify-center gap-1 bg-blue-50 text-blue-700 px-3 py-2.5 rounded-md hover:bg-blue-100 transition-colors border border-dashed border-blue-300">
-                    <Plus size={16} /> Thêm dòng mới
-                  </button>
-                </div>
+            <div className={`space-y-4 ${activeMobileTab !== 'export' ? 'hidden lg:hidden' : 'block lg:hidden'}`}>
+              <div className="p-4 bg-white border border-slate-200 rounded-lg flex flex-col gap-3 shadow-sm">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700 mb-2">Lưu & In ấn</h3>
+                <button onClick={handlePrint} className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-600/20 font-semibold">
+                  <Printer size={18} /> In kết quả
+                </button>
+                <button onClick={handleDownloadPDF} className="w-full flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-300 py-3 rounded-lg hover:bg-slate-50 transition shadow-sm font-semibold">
+                  <Download size={18} /> Tải PDF
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-5 border-t border-slate-200 bg-white grid grid-cols-2 gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+        <div className="hidden lg:grid p-5 border-t border-slate-200 bg-white grid-cols-2 gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
           <button onClick={handlePrint} className="flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-600/20 font-semibold text-sm">
             <Printer size={18} /> In
           </button>
@@ -666,11 +678,30 @@ export default function OvalBannerEditor() {
             <Download size={18} /> Tải PDF
           </button>
         </div>
+
+        <div className="lg:hidden flex bg-white border-t border-slate-200 fixed bottom-0 left-0 right-0 z-50 h-[68px] shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
+          <button onClick={() => setActiveMobileTab('template')} className={`flex-1 flex flex-col items-center justify-center gap-1 ${activeMobileTab === 'template' ? 'text-blue-600' : 'text-slate-500'}`}>
+            <LayoutTemplate size={20} />
+            <span className="text-[10px] font-semibold">Mẫu</span>
+          </button>
+          <button onClick={() => setActiveMobileTab('text')} className={`flex-1 flex flex-col items-center justify-center gap-1 ${activeMobileTab === 'text' ? 'text-blue-600' : 'text-slate-500'}`}>
+            <AlignJustify size={20} />
+            <span className="text-[10px] font-semibold">Nội dung</span>
+          </button>
+          <button onClick={() => setActiveMobileTab('settings')} className={`flex-1 flex flex-col items-center justify-center gap-1 ${activeMobileTab === 'settings' ? 'text-blue-600' : 'text-slate-500'}`}>
+            <Settings2 size={20} />
+            <span className="text-[10px] font-semibold">Cài đặt</span>
+          </button>
+          <button onClick={() => setActiveMobileTab('export')} className={`flex-1 flex flex-col items-center justify-center gap-1 ${activeMobileTab === 'export' ? 'text-blue-600' : 'text-slate-500'}`}>
+            <Printer size={20} />
+            <span className="text-[10px] font-semibold">Lưu/In</span>
+          </button>
+        </div>
       </div>
 
-      <div className={`relative transition-all duration-500 ease-in-out flex flex-col items-center justify-center preview-container ${isSidebarOpen ? 'w-[70%]' : 'w-full'}`}>
+      <div className={`relative transition-all duration-500 ease-in-out flex flex-col items-center justify-center preview-container order-1 lg:order-2 ${isSidebarOpen ? 'w-full lg:w-[70%]' : 'w-full'} h-[40vh] lg:h-screen bg-slate-200 lg:bg-transparent shadow-inner lg:shadow-none`}>
         
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`absolute top-4 bg-white p-1.5 rounded-r-lg shadow-[2px_0_10px_rgba(0,0,0,0.1)] border border-l-0 border-slate-200 text-slate-500 hover:text-blue-600 z-20 hide-on-print transition-all duration-500 ${isSidebarOpen ? 'left-0' : 'left-0'}`} title={isSidebarOpen ? "Thu gọn bảng điều khiển" : "Mở rộng bảng điều khiển"}>
+        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`hidden lg:block absolute top-4 bg-white p-1.5 rounded-r-lg shadow-[2px_0_10px_rgba(0,0,0,0.1)] border border-l-0 border-slate-200 text-slate-500 hover:text-blue-600 z-20 hide-on-print transition-all duration-500 left-0`} title={isSidebarOpen ? "Thu gọn bảng điều khiển" : "Mở rộng bảng điều khiển"}>
           {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
         </button>
 
