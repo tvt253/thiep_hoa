@@ -24,8 +24,10 @@ export default function OvalBannerEditor() {
   
   const [bgColor, setBgColor] = useState('#FF0000');
   const [textColor, setTextColor] = useState('#FFFF00');
-  const [ovalScale, setOvalScale] = useState(95); 
+  const [ovalScaleX, setOvalScaleX] = useState(95); 
+  const [ovalScaleY, setOvalScaleY] = useState(95); 
   const [lineSpacing, setLineSpacing] = useState(1.2); 
+  const [autoFit, setAutoFit] = useState(true);
   
   const [lines, setLines] = useState([
     { id: 1, text: 'CÔNG TY TNHH PHÁT TÀI', scale: 100 },
@@ -57,10 +59,10 @@ export default function OvalBannerEditor() {
   const CENTER_X = SVG_WIDTH / 2;
   const CENTER_Y = SVG_HEIGHT / 2;
 
-  const maxRx = (SVG_WIDTH / 2) - 5; 
-  const maxRy = (SVG_HEIGHT / 2) - 5;
-  const rx = (maxRx * ovalScale) / 100;
-  const ry = (maxRy * ovalScale) / 100;
+  const maxRx = (SVG_WIDTH / 2) - 2; 
+  const maxRy = (SVG_HEIGHT / 2) - 2;
+  const rx = (maxRx * ovalScaleX) / 100;
+  const ry = (maxRy * ovalScaleY) / 100;
 
   const baseFontSize = 14; 
   const totalLines = lines.length;
@@ -139,10 +141,18 @@ export default function OvalBannerEditor() {
               <div className="space-y-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm font-medium text-slate-700">
-                    <label>Kích thước Ovan</label>
-                    <span className="text-blue-600 bg-blue-100 px-2 rounded">{ovalScale}%</span>
+                    <label>Kích thước Ngang (%)</label>
+                    <span className="text-blue-600 bg-blue-100 px-2 rounded">{ovalScaleX}%</span>
                   </div>
-                  <input type="range" min="50" max="100" value={ovalScale} onChange={(e) => setOvalScale(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
+                  <input type="range" min="50" max="100" value={ovalScaleX} onChange={(e) => setOvalScaleX(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm font-medium text-slate-700">
+                    <label>Kích thước Dọc (%)</label>
+                    <span className="text-blue-600 bg-blue-100 px-2 rounded">{ovalScaleY}%</span>
+                  </div>
+                  <input type="range" min="50" max="100" value={ovalScaleY} onChange={(e) => setOvalScaleY(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
                 </div>
 
                 <div className="space-y-2">
@@ -161,9 +171,6 @@ export default function OvalBannerEditor() {
                   <AlignJustify size={18} />
                   <h3 className="text-sm font-bold uppercase tracking-wider">Văn bản</h3>
                 </div>
-                <button onClick={addLine} className="text-xs font-medium flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md hover:bg-blue-200 transition-colors">
-                  <Plus size={14} /> Thêm dòng
-                </button>
               </div>
 
               <div className="space-y-3">
@@ -189,6 +196,16 @@ export default function OvalBannerEditor() {
                     </div>
                   </div>
                 ))}
+                
+                <div className="pt-2 border-t border-slate-100 mt-2">
+                  <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer mb-3">
+                    <input type="checkbox" checked={autoFit} onChange={(e) => setAutoFit(e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" />
+                    Tự động ép chữ vừa khung (Auto-fit)
+                  </label>
+                  <button onClick={addLine} className="w-full text-sm font-medium flex items-center justify-center gap-1 bg-blue-50 text-blue-700 px-3 py-2.5 rounded-md hover:bg-blue-100 transition-colors border border-dashed border-blue-300">
+                    <Plus size={16} /> Thêm dòng mới
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -227,7 +244,7 @@ export default function OvalBannerEditor() {
 
               const fontSize = baseFontSize * (line.scale / 100);
               const approxTextWidth = line.text.length * (fontSize * 0.55); 
-              const shouldFit = approxTextWidth > safeWidth && safeWidth > 0;
+              const shouldFit = autoFit && approxTextWidth > safeWidth && safeWidth > 0;
 
               if (safeWidth > 0 && line.text.trim().length > 0) {
                 return (
