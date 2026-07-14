@@ -29,8 +29,8 @@ export default function OvalBannerEditor() {
   const [bgColor, setBgColor] = useState('#FF0000');
   const [textColor, setTextColor] = useState('#FFFF00');
   const [ovalScaleX, setOvalScaleX] = useState(95); 
-  const [ovalScaleY, setOvalScaleY] = useState(95); 
-  const [lineSpacing, setLineSpacing] = useState(1.2); 
+  const [ovalScaleY, setOvalScaleY] = useState(70); 
+  const [lineSpacing, setLineSpacing] = useState(1.5); 
   const [autoFit, setAutoFit] = useState(true);
   
   const [lines, setLines] = useState([
