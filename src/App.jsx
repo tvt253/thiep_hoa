@@ -158,22 +158,23 @@ export default function OvalBannerEditor() {
   
   const maxAllowedHeight = (ry * 2) * 0.85;
 
-  let currentMetrics = lines.map(line => {
+  let baseMetrics = lines.map(line => {
     const isBold = line.isBold !== false;
     const isItalic = line.isItalic === true;
-    const fontSize = baseFontSize * (line.scale / 100);
-    const exactWidth = measureTextWidth(line.text, fontSize, fontFamily, isBold, isItalic);
-    const height = fontSize * lineSpacing;
+    const exactWidth = measureTextWidth(line.text, baseFontSize, fontFamily, isBold, isItalic);
     return { 
        ...line, 
-       originalFontSize: fontSize, 
-       originalExactWidth: exactWidth,
-       finalFontSize: fontSize, 
-       finalHeight: height, 
-       isClamped: false, 
-       clampedScale: line.scale 
+       baseExactWidth: exactWidth,
+       isBold,
+       isItalic
     };
   });
+
+  let currentMetrics = baseMetrics.map(m => ({
+     ...m,
+     finalFontSize: baseFontSize,
+     finalHeight: baseFontSize * lineSpacing
+  }));
 
   for (let iter = 0; iter < 5; iter++) {
     let totalHeight = currentMetrics.reduce((sum, m) => sum + m.finalHeight, 0);
@@ -208,14 +209,15 @@ export default function OvalBannerEditor() {
       const innerRx = Math.max(1, rx - borderOffset);
       const innerRy = Math.max(1, ry - borderOffset);
 
-      const dy = Math.abs(yPos - CENTER_Y) + (m.finalHeight / 2);
+      const visualHeight = m.finalFontSize * 0.75;
+      const dy = Math.abs(yPos - CENTER_Y) + (visualHeight / 2);
       let safeWidth = 0;
       if (dy < innerRy) {
         const dx = innerRx * Math.sqrt(1 - Math.pow(dy / innerRy, 2));
-        safeWidth = (dx * 2) * 0.95;
+        safeWidth = (dx * 2) * 0.98;
       }
 
-      const currentExactWidth = m.originalExactWidth * (m.finalFontSize / m.originalFontSize);
+      const currentExactWidth = m.baseExactWidth * (m.finalFontSize / baseFontSize);
       let hRatio = 1;
       if (safeWidth > 0 && currentExactWidth > 0) {
         hRatio = safeWidth / currentExactWidth;
@@ -266,14 +268,15 @@ export default function OvalBannerEditor() {
     const innerRx = Math.max(1, rx - borderOffset);
     const innerRy = Math.max(1, ry - borderOffset);
     
-    const maxDy = Math.abs(m.finalYPos - CENTER_Y) + (m.finalHeight / 2);
+    const visualHeight = m.finalFontSize * 0.75;
+    const maxDy = Math.abs(m.finalYPos - CENTER_Y) + (visualHeight / 2);
     let safeWidth = 0;
     if (maxDy < innerRy) {
       const dx = innerRx * Math.sqrt(1 - Math.pow(maxDy / innerRy, 2));
-      safeWidth = (dx * 2) * 0.95;
+      safeWidth = (dx * 2) * 0.98;
     }
     
-    const actualWidth = m.originalExactWidth * (m.finalFontSize / m.originalFontSize);
+    const actualWidth = m.baseExactWidth * (m.finalFontSize / baseFontSize);
     if (actualWidth > safeWidth && actualWidth > 0 && safeWidth > 0) {
       const shrink = safeWidth / actualWidth;
       if (shrink < finalShrink) finalShrink = shrink;
@@ -282,14 +285,20 @@ export default function OvalBannerEditor() {
 
   currentMetrics = currentMetrics.map(m => {
     let newFontSize = m.finalFontSize * finalShrink;
-    const newHeight = m.finalHeight * finalShrink;
+    
+    if (!autoFit) {
+       newFontSize = newFontSize * (m.scale / 100);
+    }
+
+    const newHeight = newFontSize * lineSpacing;
+    const computedScale = Math.round((newFontSize / baseFontSize) * 100);
 
     const requestedFontSize = baseFontSize * (m.scale / 100);
     let isClamped = false;
     let clampedScale = m.scale;
     if (newFontSize < requestedFontSize * 0.99) {
       isClamped = true;
-      clampedScale = Math.floor((newFontSize / baseFontSize) * 100);
+      clampedScale = computedScale;
     }
 
     return { 
@@ -297,7 +306,8 @@ export default function OvalBannerEditor() {
         finalFontSize: newFontSize, 
         finalHeight: newHeight,
         isClamped,
-        clampedScale
+        clampedScale,
+        computedScale
     };
   });
 
