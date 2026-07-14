@@ -420,26 +420,26 @@ export default function OvalBannerEditor() {
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-slate-700">Hình dáng mẫu</label>
-                    <select 
-                      value={activeShape} 
-                      onChange={(e) => setActiveShape(e.target.value)}
-                      className="w-full text-sm font-semibold border border-slate-200 rounded p-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    >
-                      <option value="oval">Hình Ovan</option>
-                      <option value="cloud">Hình Đám Mây</option>
-                      <option value="placeholder_1" disabled>Hình chữ nhật (Sắp ra mắt)</option>
-                      <option value="placeholder_2" disabled>Hình thoi (Sắp ra mắt)</option>
-                    </select>
+                    <div className="flex bg-slate-200 p-1 rounded-lg">
+                      <button 
+                        onClick={() => setActiveShape('oval')} 
+                        className={`flex-1 text-xs font-bold py-2.5 px-3 rounded-md transition-all ${activeShape === 'oval' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:bg-slate-300'}`}
+                      >Hình Ovan</button>
+                      <button 
+                        onClick={() => setActiveShape('cloud')} 
+                        className={`flex-1 text-xs font-bold py-2.5 px-3 rounded-md transition-all ${activeShape === 'cloud' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600 hover:bg-slate-300'}`}
+                      >Hình Đám Mây</button>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-slate-700">Chủ đề thiết kế</label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex overflow-x-auto gap-2 pb-2 custom-scrollbar snap-x">
                       {THEMES.map(theme => (
                         <button
                           key={theme.id}
                           onClick={() => applyTheme(theme.id)}
-                          className={`text-xs py-2 px-2 rounded border transition-colors ${activeThemeId === theme.id ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 font-medium'}`}
+                          className={`flex-none w-28 text-center text-xs py-2.5 px-2 rounded-lg border transition-all snap-center ${activeThemeId === theme.id ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold shadow-md ring-2 ring-blue-200 ring-offset-1' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 font-medium shadow-sm'}`}
                         >
                           {theme.name}
                         </button>
@@ -462,18 +462,25 @@ export default function OvalBannerEditor() {
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
-                  <label className="text-xs font-medium text-slate-700 whitespace-nowrap mr-2">Font chữ:</label>
-                  <select 
-                    value={fontFamily} 
-                    onChange={(e) => setFontFamily(e.target.value)}
-                    className="flex-1 text-sm font-medium border border-slate-200 rounded p-1.5 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  >
-                    <option value='"Times New Roman", Times, serif'>Times New Roman</option>
-                    <option value='Arial, Helvetica, sans-serif'>Arial</option>
-                    <option value='"Courier New", Courier, monospace'>Courier New</option>
-                    <option value='Tahoma, Geneva, sans-serif'>Tahoma</option>
-                  </select>
+                <div className="space-y-2 bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
+                  <label className="text-xs font-medium text-slate-700 block">Font chữ:</label>
+                  <div className="flex overflow-x-auto gap-2 pb-1 custom-scrollbar hide-scrollbar-on-mobile">
+                    {[
+                      { val: '"Times New Roman", Times, serif', label: 'Times New Roman' },
+                      { val: 'Arial, Helvetica, sans-serif', label: 'Arial' },
+                      { val: '"Courier New", Courier, monospace', label: 'Courier New' },
+                      { val: 'Tahoma, Geneva, sans-serif', label: 'Tahoma' }
+                    ].map(f => (
+                      <button
+                        key={f.val}
+                        onClick={() => setFontFamily(f.val)}
+                        style={{ fontFamily: f.val }}
+                        className={`flex-none px-3 py-1.5 text-sm rounded-full border transition-all ${fontFamily === f.val ? 'bg-slate-800 text-white border-slate-800 shadow-md scale-105' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 shadow-sm'}`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 {lineMetrics.map((line, index) => (
                   <div key={line.id} className={`bg-white p-2.5 rounded-lg border shadow-sm space-y-2 transition hover:shadow-md ${!autoFit && line.isClamped ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-200 hover:border-blue-300'}`}>
@@ -490,31 +497,36 @@ export default function OvalBannerEditor() {
                         <Trash2 size={16} />
                       </button>
                     </div>
-                    <div className="flex items-center gap-2 pl-8">
-                      <button 
-                        onClick={() => updateLine(line.id, 'isBold', line.isBold === false ? true : false)} 
-                        className={`p-1.5 rounded transition-colors ${line.isBold !== false ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
-                        title="In đậm"
-                      >
-                        <Bold size={14} strokeWidth={line.isBold !== false ? 3 : 2} />
-                      </button>
-                      <button 
-                        onClick={() => updateLine(line.id, 'isItalic', !line.isItalic)} 
-                        className={`p-1.5 rounded transition-colors ${line.isItalic ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
-                        title="In nghiêng"
-                      >
-                        <Italic size={14} strokeWidth={line.isItalic ? 3 : 2} />
-                      </button>
+                    <div className="flex flex-wrap items-center gap-2 lg:gap-3 pl-8">
+                      <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-md">
+                        <button 
+                          onClick={() => updateLine(line.id, 'isBold', line.isBold === false ? true : false)} 
+                          className={`p-1.5 rounded transition-colors ${line.isBold !== false ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-slate-500 hover:bg-slate-200'}`}
+                          title="In đậm"
+                        >
+                          <Bold size={14} strokeWidth={line.isBold !== false ? 3 : 2} />
+                        </button>
+                        <button 
+                          onClick={() => updateLine(line.id, 'isItalic', !line.isItalic)} 
+                          className={`p-1.5 rounded transition-colors ${line.isItalic ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-slate-500 hover:bg-slate-200'}`}
+                          title="In nghiêng"
+                        >
+                          <Italic size={14} strokeWidth={line.isItalic ? 3 : 2} />
+                        </button>
+                      </div>
 
-                      <span className="text-xs font-medium text-slate-500 whitespace-nowrap ml-1 hidden lg:inline">Size %:</span>
-                      <input 
-                        type="range" min="50" max="250" 
-                        value={autoFit ? Math.round((line.finalFontSize / baseFontSize) * 100) : line.scale} 
-                        onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} 
-                        disabled={autoFit}
-                        className={`w-20 h-1.5 rounded-lg appearance-none ${autoFit ? 'bg-slate-200 cursor-not-allowed opacity-60' : 'bg-slate-300 cursor-pointer accent-blue-600'}`} 
-                      />
-                      <div className="flex flex-col items-end w-8">
+                      <div className="flex items-center gap-2 flex-1 min-w-[120px]">
+                        <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider hidden lg:inline">Cỡ chữ:</span>
+                        <input 
+                          type="range" min="50" max="250" 
+                          value={autoFit ? Math.round((line.finalFontSize / baseFontSize) * 100) : line.scale} 
+                          onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} 
+                          disabled={autoFit}
+                          className={`flex-1 h-2 rounded-lg appearance-none ${autoFit ? 'bg-slate-200 cursor-not-allowed opacity-60' : 'bg-slate-300 cursor-pointer accent-blue-600'}`} 
+                        />
+                      </div>
+                      
+                      <div className="flex flex-col items-end w-8 ml-auto">
                         <span className={`text-xs font-bold ${autoFit ? 'text-slate-400' : 'text-blue-600'}`}>
                           {autoFit ? Math.round((line.finalFontSize / baseFontSize) * 100) : line.scale}%
                         </span>
@@ -561,7 +573,7 @@ export default function OvalBannerEditor() {
                               <button 
                                 key={`bg-${s.value}`}
                                 onClick={() => setBgColor(s.value)}
-                                className={`w-5 h-5 rounded-full border shadow-sm transition-transform hover:scale-110 ${bgColor === s.value ? 'ring-2 ring-blue-500 ring-offset-2 border-transparent' : 'border-slate-300'}`}
+                                className={`w-8 h-8 rounded-full border shadow-sm transition-transform hover:scale-110 ${bgColor === s.value ? 'ring-2 ring-blue-500 ring-offset-2 border-transparent' : 'border-slate-300'}`}
                                 style={{ backgroundColor: s.value }}
                                 title={s.label}
                               />
@@ -582,7 +594,7 @@ export default function OvalBannerEditor() {
                               <button 
                                 key={`text-${s.value}`}
                                 onClick={() => setTextColor(s.value)}
-                                className={`w-5 h-5 rounded-full border shadow-sm transition-transform hover:scale-110 ${textColor === s.value ? 'ring-2 ring-blue-500 ring-offset-2 border-transparent' : 'border-slate-300'}`}
+                                className={`w-8 h-8 rounded-full border shadow-sm transition-transform hover:scale-110 ${textColor === s.value ? 'ring-2 ring-blue-500 ring-offset-2 border-transparent' : 'border-slate-300'}`}
                                 style={{ backgroundColor: s.value }}
                                 title={s.label}
                               />
@@ -632,7 +644,7 @@ export default function OvalBannerEditor() {
                           <label>Kích thước Ngang (%)</label>
                           <span className="text-blue-600 bg-blue-50 px-1.5 rounded">{ovalScaleX}%</span>
                         </div>
-                        <input type="range" min="50" max="100" value={ovalScaleX} onChange={(e) => setOvalScaleX(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer h-1.5" />
+                        <input type="range" min="50" max="100" value={ovalScaleX} onChange={(e) => setOvalScaleX(Number(e.target.value))} className="w-full bg-slate-200 rounded-lg appearance-none cursor-pointer h-2 accent-blue-600" />
                       </div>
 
                       <div className="space-y-1.5">
@@ -640,7 +652,7 @@ export default function OvalBannerEditor() {
                           <label>Kích thước Dọc (%)</label>
                           <span className="text-blue-600 bg-blue-50 px-1.5 rounded">{ovalScaleY}%</span>
                         </div>
-                        <input type="range" min="50" max="100" value={ovalScaleY} onChange={(e) => setOvalScaleY(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer h-1.5" />
+                        <input type="range" min="50" max="100" value={ovalScaleY} onChange={(e) => setOvalScaleY(Number(e.target.value))} className="w-full bg-slate-200 rounded-lg appearance-none cursor-pointer h-2 accent-blue-600" />
                       </div>
 
                       <div className="space-y-1.5">
@@ -648,7 +660,7 @@ export default function OvalBannerEditor() {
                           <label>Khoảng cách dòng</label>
                           <span className="text-blue-600 bg-blue-50 px-1.5 rounded">{lineSpacing}</span>
                         </div>
-                        <input type="range" min="0.5" max="3.0" step="0.1" value={lineSpacing} onChange={(e) => setLineSpacing(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer h-1.5" />
+                        <input type="range" min="0.5" max="3.0" step="0.1" value={lineSpacing} onChange={(e) => setLineSpacing(Number(e.target.value))} className="w-full bg-slate-200 rounded-lg appearance-none cursor-pointer h-2 accent-blue-600" />
                       </div>
                     </div>
                   </div>
@@ -659,11 +671,12 @@ export default function OvalBannerEditor() {
             <div className={`space-y-4 ${activeMobileTab !== 'export' ? 'hidden lg:hidden' : 'block lg:hidden'}`}>
               <div className="p-4 bg-white border border-slate-200 rounded-lg flex flex-col gap-3 shadow-sm">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700 mb-2">Lưu & In ấn</h3>
-                <button onClick={handlePrint} className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-600/20 font-semibold">
-                  <Printer size={18} /> In kết quả
+                <p className="text-xs text-slate-500 mb-3">Tải về hoặc in trực tiếp thiệp đã thiết kế. Khuyên dùng định dạng PDF để in ấn sắc nét nhất.</p>
+                <button onClick={handleDownloadPDF} className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3.5 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-600/30 font-bold text-sm">
+                  <Download size={20} /> TẢI FILE PDF
                 </button>
-                <button onClick={handleDownloadPDF} className="w-full flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-300 py-3 rounded-lg hover:bg-slate-50 transition shadow-sm font-semibold">
-                  <Download size={18} /> Tải PDF
+                <button onClick={handlePrint} className="w-full flex items-center justify-center gap-2 bg-slate-100 text-slate-700 border border-slate-200 py-3.5 rounded-xl hover:bg-slate-200 transition shadow-sm font-bold text-sm">
+                  <Printer size={20} /> IN TRỰC TIẾP
                 </button>
               </div>
             </div>
@@ -699,7 +712,7 @@ export default function OvalBannerEditor() {
         </div>
       </div>
 
-      <div className={`relative transition-all duration-500 ease-in-out flex flex-col items-center justify-center preview-container order-1 lg:order-2 ${isSidebarOpen ? 'w-full lg:w-[70%]' : 'w-full'} h-[40vh] lg:h-screen bg-slate-200 lg:bg-transparent shadow-inner lg:shadow-none`}>
+      <div className={`relative transition-all duration-500 ease-in-out flex flex-col items-center justify-center preview-container order-1 lg:order-2 ${isSidebarOpen ? 'w-full lg:w-[70%]' : 'w-full'} h-auto aspect-[297/210] lg:h-screen bg-slate-200 lg:bg-transparent shadow-inner lg:shadow-none p-4 lg:p-0`}>
         
         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`hidden lg:block absolute top-4 bg-white p-1.5 rounded-r-lg shadow-[2px_0_10px_rgba(0,0,0,0.1)] border border-l-0 border-slate-200 text-slate-500 hover:text-blue-600 z-20 hide-on-print transition-all duration-500 left-0`} title={isSidebarOpen ? "Thu gọn bảng điều khiển" : "Mở rộng bảng điều khiển"}>
           {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
