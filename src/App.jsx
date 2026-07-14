@@ -11,7 +11,8 @@ import {
   AlignJustify,
   Settings2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  RefreshCw
 } from 'lucide-react';
 
 const SWATCHES = [
@@ -84,15 +85,59 @@ export default function OvalBannerEditor() {
 
   const baseFontSize = 14; 
   
-  const lineMetrics = lines.map(line => {
+  // Pass 1: Approximate metrics (unclamped)
+  let lineMetrics = lines.map(line => {
     const fontSize = baseFontSize * (line.scale / 100);
     const exactWidth = measureTextWidth(line.text, fontSize);
     const height = fontSize * lineSpacing;
     return { ...line, fontSize, height, exactWidth };
   });
   
-  const totalTextHeight = lineMetrics.reduce((sum, m) => sum + m.height, 0);
+  let totalTextHeight = lineMetrics.reduce((sum, m) => sum + m.height, 0);
   let currentY = CENTER_Y - (totalTextHeight / 2);
+
+  // Pass 2: Calculate safeWidth, clamped sizes, and real heights
+  lineMetrics = lineMetrics.map(line => {
+    const yPos = currentY + (line.height / 2);
+    currentY += line.height;
+
+    const dy = Math.abs(yPos - CENTER_Y);
+    let safeWidth = 0;
+    if (dy < ry) {
+      const dx = rx * Math.sqrt(1 - Math.pow(dy / ry, 2));
+      safeWidth = (dx * 2) * 0.95;
+    }
+
+    let finalFontSize = line.fontSize;
+    let isClamped = false;
+    let clampedScale = line.scale;
+
+    if (autoFit && line.exactWidth > safeWidth && safeWidth > 0) {
+      const scaleRatio = safeWidth / line.exactWidth;
+      finalFontSize = line.fontSize * scaleRatio;
+      isClamped = true;
+      clampedScale = Math.floor(line.scale * scaleRatio);
+    }
+
+    const realHeight = finalFontSize * lineSpacing;
+    return { ...line, finalFontSize, realHeight, safeWidth, yPosApprox: yPos, isClamped, clampedScale };
+  });
+
+  // Pass 3: Final Y positions using real clamped heights
+  const realTotalTextHeight = lineMetrics.reduce((sum, m) => sum + m.realHeight, 0);
+  let finalCurrentY = CENTER_Y - (realTotalTextHeight / 2);
+
+  lineMetrics = lineMetrics.map(line => {
+    const finalYPos = finalCurrentY + (line.realHeight / 2);
+    finalCurrentY += line.realHeight;
+    return { ...line, finalYPos };
+  });
+
+  const syncSizes = () => {
+    if (lineMetrics.length === 0) return;
+    const minScale = Math.min(...lineMetrics.map(l => l.clampedScale));
+    setLines(lines.map(l => ({ ...l, scale: minScale })));
+  };
 
   return (
     <div className="flex h-screen w-full bg-slate-100 overflow-hidden font-sans">
@@ -213,13 +258,16 @@ export default function OvalBannerEditor() {
                   <AlignJustify size={18} />
                   <h3 className="text-sm font-bold uppercase tracking-wider">Văn bản</h3>
                 </div>
+                <button onClick={syncSizes} className="text-xs font-medium flex items-center gap-1.5 bg-indigo-50 text-indigo-600 px-2.5 py-1.5 rounded hover:bg-indigo-100 transition-colors border border-indigo-200" title="Ép tất cả các dòng bằng với kích thước của dòng nhỏ nhất">
+                  <RefreshCw size={14} /> Đồng bộ Size
+                </button>
               </div>
 
               <div className="space-y-3">
-                {lines.map((line, index) => (
-                  <div key={line.id} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm space-y-3 transition hover:border-blue-300 hover:shadow-md">
+                {lineMetrics.map((line, index) => (
+                  <div key={line.id} className={`bg-white p-3 rounded-lg border shadow-sm space-y-3 transition hover:shadow-md ${line.isClamped ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-200 hover:border-blue-300'}`}>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-xs font-bold text-slate-500">
+                      <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${line.isClamped ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500'}`}>
                         {index + 1}
                       </div>
                       <input 
@@ -233,8 +281,11 @@ export default function OvalBannerEditor() {
                     </div>
                     <div className="flex items-center gap-3 pl-8">
                       <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Size %:</span>
-                      <input type="range" min="50" max="250" value={line.scale} onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600" />
-                      <span className="text-xs font-bold text-slate-600 w-8 text-right">{line.scale}%</span>
+                      <input type="range" min="50" max="250" value={line.scale} onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} className={`flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer ${line.isClamped ? 'accent-orange-500' : 'accent-slate-600'}`} />
+                      <div className="flex flex-col items-end w-10">
+                        <span className={`text-xs font-bold ${line.isClamped ? 'text-orange-600' : 'text-slate-600'}`}>{line.scale}%</span>
+                        {line.isClamped && <span className="text-[9px] text-orange-500 font-medium leading-none -mt-0.5" title="Đã chạm viền">Max: {line.clampedScale}</span>}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -275,32 +326,15 @@ export default function OvalBannerEditor() {
             <ellipse cx={CENTER_X} cy={CENTER_Y} rx={rx} ry={ry} fill={bgColor} />
 
             {lineMetrics.map((line) => {
-              const yPos = currentY + (line.height / 2);
-              currentY += line.height;
-
-              const dy = Math.abs(yPos - CENTER_Y);
-              let safeWidth = 0;
-              
-              if (dy < ry) {
-                const dx = rx * Math.sqrt(1 - Math.pow(dy / ry, 2));
-                safeWidth = (dx * 2) * 0.95;
-              }
-
-              let finalFontSize = line.fontSize;
-              if (autoFit && line.exactWidth > safeWidth && safeWidth > 0) {
-                const scaleRatio = safeWidth / line.exactWidth;
-                finalFontSize = line.fontSize * scaleRatio;
-              }
-
-              if (safeWidth > 0 && line.text.trim().length > 0) {
+              if (line.safeWidth > 0 && line.text.trim().length > 0) {
                 return (
                   <text
                     key={line.id}
                     x={CENTER_X}
-                    y={yPos}
+                    y={line.finalYPos}
                     fontFamily='"Times New Roman", Times, serif'
                     fontWeight="bold"
-                    fontSize={finalFontSize}
+                    fontSize={line.finalFontSize}
                     fill={textColor}
                     textAnchor="middle"
                     dominantBaseline="middle"
