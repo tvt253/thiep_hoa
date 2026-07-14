@@ -452,9 +452,9 @@ export default function OvalBannerEditor() {
 
               <div className="space-y-3">
                 {lineMetrics.map((line, index) => (
-                  <div key={line.id} className={`bg-white p-3 rounded-lg border shadow-sm space-y-3 transition hover:shadow-md ${line.isClamped ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-200 hover:border-blue-300'}`}>
+                  <div key={line.id} className={`bg-white p-3 rounded-lg border shadow-sm space-y-3 transition hover:shadow-md ${!autoFit && line.isClamped ? 'border-orange-300 ring-1 ring-orange-100' : 'border-slate-200 hover:border-blue-300'}`}>
                     <div className="flex items-center gap-2">
-                      <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${line.isClamped ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500'}`}>
+                      <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${!autoFit && line.isClamped ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500'}`}>
                         {index + 1}
                       </div>
                       <input 
@@ -469,24 +469,32 @@ export default function OvalBannerEditor() {
                     <div className="flex items-center gap-2 pl-8">
                       <button 
                         onClick={() => updateLine(line.id, 'isBold', line.isBold === false ? true : false)} 
-                        className={`p-1 rounded ${line.isBold !== false ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}
+                        className={`p-1.5 rounded transition-colors ${line.isBold !== false ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
                         title="In đậm"
                       >
-                        <Bold size={14} />
+                        <Bold size={14} strokeWidth={line.isBold !== false ? 3 : 2} />
                       </button>
                       <button 
                         onClick={() => updateLine(line.id, 'isItalic', !line.isItalic)} 
-                        className={`p-1 rounded ${line.isItalic ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}
+                        className={`p-1.5 rounded transition-colors ${line.isItalic ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
                         title="In nghiêng"
                       >
-                        <Italic size={14} />
+                        <Italic size={14} strokeWidth={line.isItalic ? 3 : 2} />
                       </button>
 
                       <span className="text-xs font-medium text-slate-500 whitespace-nowrap ml-1">Size %:</span>
-                      <input type="range" min="50" max="250" value={line.scale} onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} className={`w-20 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer ${line.isClamped ? 'accent-orange-500' : 'accent-slate-600'}`} />
+                      <input 
+                        type="range" min="50" max="250" 
+                        value={autoFit ? Math.round((line.finalFontSize / baseFontSize) * 100) : line.scale} 
+                        onChange={(e) => updateLine(line.id, 'scale', Number(e.target.value))} 
+                        disabled={autoFit}
+                        className={`w-20 h-1.5 rounded-lg appearance-none ${autoFit ? 'bg-slate-200 cursor-not-allowed opacity-60' : 'bg-slate-300 cursor-pointer accent-blue-600'}`} 
+                      />
                       <div className="flex flex-col items-end w-8">
-                        <span className={`text-xs font-bold ${line.isClamped ? 'text-orange-600' : 'text-slate-600'}`}>{line.scale}%</span>
-                        {line.isClamped && <span className="text-[9px] text-orange-500 font-medium leading-none -mt-0.5" title="Đã chạm viền">Max: {line.clampedScale}</span>}
+                        <span className={`text-xs font-bold ${autoFit ? 'text-slate-400' : 'text-blue-600'}`}>
+                          {autoFit ? Math.round((line.finalFontSize / baseFontSize) * 100) : line.scale}%
+                        </span>
+                        {!autoFit && line.isClamped && <span className="text-[9px] text-orange-500 font-medium leading-none -mt-0.5" title="Bị giới hạn viền">Max: {line.clampedScale}</span>}
                       </div>
                     </div>
                   </div>
