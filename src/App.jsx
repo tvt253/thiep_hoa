@@ -134,28 +134,59 @@ export default function OvalBannerEditor() {
         safeWidth = (dx * 2) * 0.95;
       }
 
-      let newFontSize = m.vFontSize;
-      let finalRatio = verticalRatio;
-      let isClamped = verticalRatio < 0.99; 
-
+      let hRatio = 1;
       if (autoFit && m.vExactWidth > safeWidth && safeWidth > 0) {
-        const hRatio = safeWidth / m.vExactWidth;
-        newFontSize = m.vFontSize * hRatio;
-        finalRatio = verticalRatio * hRatio;
-        isClamped = true;
+        hRatio = safeWidth / m.vExactWidth;
       }
-
-      const newHeight = newFontSize * lineSpacing;
       
+      return { ...m, yPosApprox: yPos, safeWidth, hRatio };
+    });
+
+    if (autoFit && currentMetrics.length > 1) {
+      const effectiveSizes = currentMetrics.map(l => l.vFontSize * l.hRatio);
+      const minSize = Math.min(...effectiveSizes);
+      const maxAllowedSize = minSize * 1.5;
+
+      currentMetrics = currentMetrics.map(l => {
+         let size = l.vFontSize * l.hRatio;
+         l.harmonyRatio = size > maxAllowedSize ? (maxAllowedSize / size) : 1;
+         return l;
+      });
+    } else {
+      currentMetrics = currentMetrics.map(l => ({ ...l, harmonyRatio: 1 }));
+    }
+
+    currentMetrics = currentMetrics.map(m => {
+      let newFontSize = m.vFontSize * m.hRatio * m.harmonyRatio;
+      let finalRatio = verticalRatio * m.hRatio * m.harmonyRatio;
+      
+      const newHeight = newFontSize * lineSpacing;
+      let expectedWidth = m.vExactWidth * m.hRatio * m.harmonyRatio;
+
       return { 
          ...m, 
          finalFontSize: newFontSize, 
          finalHeight: newHeight, 
-         safeWidth, 
-         finalYPos: yPos, 
-         isClamped, 
-         clampedScale: Math.floor(m.scale * finalRatio) 
+         finalYPos: m.yPosApprox, 
+         isClamped: finalRatio < 0.99, 
+         clampedScale: Math.floor(m.scale * finalRatio),
+         expectedWidth
       };
+    });
+  }
+
+  if (autoFit && currentMetrics.length > 1) {
+    const maxLineWidth = Math.max(...currentMetrics.map(l => l.expectedWidth));
+    currentMetrics = currentMetrics.map(l => {
+       let targetWidth = undefined;
+       const minTarget = maxLineWidth * 0.8;
+       if (l.expectedWidth > 0 && l.expectedWidth < minTarget) {
+          targetWidth = Math.min(minTarget, l.expectedWidth * 2.0);
+          if (targetWidth > l.safeWidth && l.safeWidth > 0) {
+             targetWidth = l.safeWidth;
+          }
+       }
+       return { ...l, targetWidth };
     });
   }
 
@@ -366,6 +397,8 @@ export default function OvalBannerEditor() {
                     fill={textColor}
                     textAnchor="middle"
                     dominantBaseline="middle"
+                    textLength={line.targetWidth}
+                    lengthAdjust={line.targetWidth ? "spacing" : undefined}
                   >
                     {line.text}
                   </text>
