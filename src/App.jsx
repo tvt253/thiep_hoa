@@ -22,6 +22,20 @@ const SWATCHES = [
   { label: 'Trắng', value: '#FFFFFF' },
 ];
 
+const getCanvasContext = () => {
+  if (!window._canvasCtx) {
+    const canvas = document.createElement('canvas');
+    window._canvasCtx = canvas.getContext('2d');
+  }
+  return window._canvasCtx;
+};
+
+const measureTextWidth = (text, fontSize) => {
+  const ctx = getCanvasContext();
+  ctx.font = `bold ${fontSize}px "Times New Roman", Times, serif`;
+  return ctx.measureText(text).width;
+};
+
 export default function OvalBannerEditor() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -69,10 +83,16 @@ export default function OvalBannerEditor() {
   const ry = (maxRy * ovalScaleY) / 100;
 
   const baseFontSize = 14; 
-  const totalLines = lines.length;
-  const spacingUnit = baseFontSize * lineSpacing; 
-  const totalTextHeight = (totalLines - 1) * spacingUnit;
-  const startY = CENTER_Y - (totalTextHeight / 2);
+  
+  const lineMetrics = lines.map(line => {
+    const fontSize = baseFontSize * (line.scale / 100);
+    const exactWidth = measureTextWidth(line.text, fontSize);
+    const height = fontSize * lineSpacing;
+    return { ...line, fontSize, height, exactWidth };
+  });
+  
+  const totalTextHeight = lineMetrics.reduce((sum, m) => sum + m.height, 0);
+  let currentY = CENTER_Y - (totalTextHeight / 2);
 
   return (
     <div className="flex h-screen w-full bg-slate-100 overflow-hidden font-sans">
@@ -254,19 +274,19 @@ export default function OvalBannerEditor() {
           <svg viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
             <ellipse cx={CENTER_X} cy={CENTER_Y} rx={rx} ry={ry} fill={bgColor} />
 
-            {lines.map((line, index) => {
-              const yPos = startY + (index * spacingUnit);
+            {lineMetrics.map((line) => {
+              const yPos = currentY + (line.height / 2);
+              currentY += line.height;
+
               const dy = Math.abs(yPos - CENTER_Y);
               let safeWidth = 0;
               
               if (dy < ry) {
                 const dx = rx * Math.sqrt(1 - Math.pow(dy / ry, 2));
-                safeWidth = (dx * 2) * 0.9;
+                safeWidth = (dx * 2) * 0.95;
               }
 
-              const fontSize = baseFontSize * (line.scale / 100);
-              const approxTextWidth = line.text.length * (fontSize * 0.55); 
-              const shouldFit = autoFit && approxTextWidth > safeWidth && safeWidth > 0;
+              const shouldFit = autoFit && line.exactWidth > safeWidth && safeWidth > 0;
 
               if (safeWidth > 0 && line.text.trim().length > 0) {
                 return (
@@ -276,7 +296,7 @@ export default function OvalBannerEditor() {
                     y={yPos}
                     fontFamily='"Times New Roman", Times, serif'
                     fontWeight="bold"
-                    fontSize={fontSize}
+                    fontSize={line.fontSize}
                     fill={textColor}
                     textAnchor="middle"
                     dominantBaseline="middle"
