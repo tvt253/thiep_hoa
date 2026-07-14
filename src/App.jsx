@@ -121,7 +121,7 @@ export default function OvalBannerEditor() {
   const [bgColor, setBgColor] = useState(THEMES[0].bgColor);
   const [textColor, setTextColor] = useState(THEMES[0].textColor);
   const [currentBorder, setCurrentBorder] = useState(THEMES[0].border);
-  
+  const [cloudBorders, setCloudBorders] = useState(THEMES[0].cloudBorders || ['#000', '#000', '#000']);
   const [ovalScaleX, setOvalScaleX] = useState(95); 
   const [ovalScaleY, setOvalScaleY] = useState(70); 
   const [lineSpacing, setLineSpacing] = useState(1.5); 
@@ -136,6 +136,7 @@ export default function OvalBannerEditor() {
     setBgColor(theme.bgColor);
     setTextColor(theme.textColor);
     setCurrentBorder(theme.border);
+    setCloudBorders(theme.cloudBorders || ['#000', '#000', '#000']);
     setLines(theme.lines.map((l, i) => ({ ...l, id: Date.now() + i })));
   };
 
@@ -510,6 +511,29 @@ export default function OvalBannerEditor() {
                           />
                         </div>
                       </div>
+
+                      {activeShape === 'cloud' && (
+                        <div className="bg-white p-2.5 rounded border border-slate-200 shadow-sm space-y-2">
+                          <label className="text-xs font-medium text-slate-700">Màu 3 Viền Đám Mây</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[0, 1, 2].map((idx) => (
+                              <div key={`cloud-border-${idx}`} className="flex flex-col gap-1 items-center bg-slate-50 p-1.5 rounded border border-slate-200">
+                                <span className="text-[10px] text-slate-500 font-medium">Viền {idx + 1}</span>
+                                <input 
+                                  type="color" 
+                                  value={cloudBorders[idx]} 
+                                  onChange={(e) => {
+                                    const newBorders = [...cloudBorders];
+                                    newBorders[idx] = e.target.value;
+                                    setCloudBorders(newBorders);
+                                  }}
+                                  className="w-full h-6 cursor-pointer border-0 p-0 bg-transparent"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -736,10 +760,8 @@ export default function OvalBannerEditor() {
                 </defs>
 
                 {(() => {
-                  const currentTheme = THEMES.find(t => t.id === activeThemeId);
-                  const colors = currentTheme?.cloudColors || [currentBorder?.color || '#000', bgColor];
-                  return colors.map((color, index) => {
-                    const width = CLOUD_STROKE_WIDTH + (colors.length - 1 - index) * 12;
+                  return cloudBorders.map((color, index) => {
+                    const width = CLOUD_STROKE_WIDTH + (cloudBorders.length - index) * 20;
                     return (
                       <use 
                         key={`cloud-layer-${index}`}
@@ -753,6 +775,8 @@ export default function OvalBannerEditor() {
                     );
                   });
                 })()}
+
+                <use href="#text-cloud-group" fill={bgColor} stroke={bgColor} strokeWidth={CLOUD_STROKE_WIDTH} strokeLinejoin="round" strokeLinecap="round" />
 
                 <use href="#text-cloud-group" fill={textColor} />
               </>
