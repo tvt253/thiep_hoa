@@ -85,53 +85,81 @@ export default function OvalBannerEditor() {
 
   const baseFontSize = 14; 
   
-  // Pass 1: Approximate metrics (unclamped)
-  let lineMetrics = lines.map(line => {
+  const maxAllowedHeight = (ry * 2) * 0.85;
+
+  let currentMetrics = lines.map(line => {
     const fontSize = baseFontSize * (line.scale / 100);
     const exactWidth = measureTextWidth(line.text, fontSize);
     const height = fontSize * lineSpacing;
-    return { ...line, fontSize, height, exactWidth };
+    return { 
+       ...line, 
+       originalFontSize: fontSize, 
+       originalExactWidth: exactWidth,
+       finalFontSize: fontSize, 
+       finalHeight: height, 
+       isClamped: false, 
+       clampedScale: line.scale 
+    };
   });
-  
-  let totalTextHeight = lineMetrics.reduce((sum, m) => sum + m.height, 0);
-  let currentY = CENTER_Y - (totalTextHeight / 2);
 
-  // Pass 2: Calculate safeWidth, clamped sizes, and real heights
-  lineMetrics = lineMetrics.map(line => {
-    const yPos = currentY + (line.height / 2);
-    currentY += line.height;
-
-    const dy = Math.abs(yPos - CENTER_Y);
-    let safeWidth = 0;
-    if (dy < ry) {
-      const dx = rx * Math.sqrt(1 - Math.pow(dy / ry, 2));
-      safeWidth = (dx * 2) * 0.95;
+  for (let iter = 0; iter < 5; iter++) {
+    let totalHeight = currentMetrics.reduce((sum, m) => sum + m.finalHeight, 0);
+    
+    let verticalRatio = 1;
+    if (autoFit && totalHeight > maxAllowedHeight) {
+      verticalRatio = maxAllowedHeight / totalHeight;
     }
 
-    let finalFontSize = line.fontSize;
-    let isClamped = false;
-    let clampedScale = line.scale;
+    currentMetrics = currentMetrics.map(m => {
+      const vFontSize = m.originalFontSize * verticalRatio;
+      return {
+         ...m,
+         vFontSize,
+         vExactWidth: m.originalExactWidth * verticalRatio,
+         vHeight: vFontSize * lineSpacing,
+      };
+    });
 
-    if (autoFit && line.exactWidth > safeWidth && safeWidth > 0) {
-      const scaleRatio = safeWidth / line.exactWidth;
-      finalFontSize = line.fontSize * scaleRatio;
-      isClamped = true;
-      clampedScale = Math.floor(line.scale * scaleRatio);
-    }
+    totalHeight = currentMetrics.reduce((sum, m) => sum + m.vHeight, 0);
+    let startY = CENTER_Y - (totalHeight / 2);
 
-    const realHeight = finalFontSize * lineSpacing;
-    return { ...line, finalFontSize, realHeight, safeWidth, yPosApprox: yPos, isClamped, clampedScale };
-  });
+    currentMetrics = currentMetrics.map(m => {
+      const yPos = startY + (m.vHeight / 2);
+      startY += m.vHeight;
 
-  // Pass 3: Final Y positions using real clamped heights
-  const realTotalTextHeight = lineMetrics.reduce((sum, m) => sum + m.realHeight, 0);
-  let finalCurrentY = CENTER_Y - (realTotalTextHeight / 2);
+      const dy = Math.abs(yPos - CENTER_Y);
+      let safeWidth = 0;
+      if (dy < ry) {
+        const dx = rx * Math.sqrt(1 - Math.pow(dy / ry, 2));
+        safeWidth = (dx * 2) * 0.95;
+      }
 
-  lineMetrics = lineMetrics.map(line => {
-    const finalYPos = finalCurrentY + (line.realHeight / 2);
-    finalCurrentY += line.realHeight;
-    return { ...line, finalYPos };
-  });
+      let newFontSize = m.vFontSize;
+      let finalRatio = verticalRatio;
+      let isClamped = verticalRatio < 0.99; 
+
+      if (autoFit && m.vExactWidth > safeWidth && safeWidth > 0) {
+        const hRatio = safeWidth / m.vExactWidth;
+        newFontSize = m.vFontSize * hRatio;
+        finalRatio = verticalRatio * hRatio;
+        isClamped = true;
+      }
+
+      const newHeight = newFontSize * lineSpacing;
+      
+      return { 
+         ...m, 
+         finalFontSize: newFontSize, 
+         finalHeight: newHeight, 
+         safeWidth, 
+         finalYPos: yPos, 
+         isClamped, 
+         clampedScale: Math.floor(m.scale * finalRatio) 
+      };
+    });
+  }
+
+  const lineMetrics = currentMetrics;
 
   const syncSizes = () => {
     if (lineMetrics.length === 0) return;
@@ -326,7 +354,7 @@ export default function OvalBannerEditor() {
             <ellipse cx={CENTER_X} cy={CENTER_Y} rx={rx} ry={ry} fill={bgColor} />
 
             {lineMetrics.map((line) => {
-              if (line.safeWidth > 0 && line.text.trim().length > 0) {
+              if (line.text.trim().length > 0) {
                 return (
                   <text
                     key={line.id}
