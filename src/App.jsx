@@ -28,6 +28,29 @@ const SWATCHES = [
 
 const THEMES = [
   {
+    id: 'khai_truong',
+    name: 'Khai trương',
+    bgColor: '#FF0000',
+    textColor: '#FFFF00',
+    border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
+    lines: [
+      { id: 1, text: 'CÔ LINH TIẾNG TRUNG', scale: 100 },
+      { id: 2, text: 'CHÚC MỪNG', scale: 100 },
+      { id: 3, text: 'KHAI TRƯƠNG HỒNG PHÁT', scale: 100 }
+    ]
+  },
+  {
+    id: 'sinh_nhat',
+    name: 'Sinh nhật',
+    bgColor: '#FF0000',
+    textColor: '#FFFFFF',
+    border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
+    lines: [
+      { id: 1, text: 'GIA ĐÌNH EM SƠN', scale: 100 },
+      { id: 2, text: 'CHÚC MỪNG SINH NHẬT', scale: 100 }
+    ]
+  },
+  {
     id: 'dang_huong',
     name: 'Dâng hương',
     bgColor: '#FFFF00',
@@ -40,30 +63,6 @@ const THEMES = [
     ]
   },
   {
-    id: 'kinh_le',
-    name: 'Kính lễ',
-    bgColor: '#FF0000',
-    textColor: '#FFFF00',
-    border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
-    lines: [
-      { id: 1, text: 'NGÂN HÀNG NHÀ NƯỚC', scale: 100 },
-      { id: 2, text: 'QUẢNG TRỊ', scale: 100 },
-      { id: 3, text: 'KÍNH LỄ!', scale: 100 }
-    ]
-  },
-  {
-    id: 'sinh_nhat',
-    name: 'Sinh nhật',
-    bgColor: '#FF0000',
-    textColor: '#FFFFFF',
-    border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
-    lines: [
-      { id: 1, text: 'GIA ĐÌNH EM SƠN NGA', scale: 100 },
-      { id: 2, text: 'CHÚC MỪNG SINH NHẬT', scale: 100 },
-      { id: 3, text: 'ANH TRAI', scale: 100 }
-    ]
-  },
-  {
     id: 'kinh_vieng',
     name: 'Kính viếng',
     bgColor: '#000000',
@@ -71,7 +70,7 @@ const THEMES = [
     border: { type: 'single', color: '#FFFFFF', padding: 4, width: 2 },
     lines: [
       { id: 1, text: 'GIA ĐÌNH THÔNG GIA', scale: 100 },
-      { id: 2, text: 'THÁI HỒNG VỆ', scale: 100 },
+      { id: 2, text: 'QUÂN HƯƠNG', scale: 100 },
       { id: 3, text: 'KÍNH VIẾNG', scale: 100 }
     ]
   }
@@ -101,7 +100,7 @@ export default function OvalBannerEditor() {
   const [fontFamily, setFontFamily] = useState('"Times New Roman", Times, serif');
   
   const [activeShape, setActiveShape] = useState('oval');
-  const [activeThemeId, setActiveThemeId] = useState('dang_huong');
+  const [activeThemeId, setActiveThemeId] = useState(THEMES[0].id);
   
   const [bgColor, setBgColor] = useState(THEMES[0].bgColor);
   const [textColor, setTextColor] = useState(THEMES[0].textColor);
